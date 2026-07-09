@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'nameWorkoutExercises';
+const STORAGE_KEY = 'nameWorkoutExercisesV2';
 
 // Source: "The Name Workout Challenge" poster. amount/unit is the base rep or
 // second count; "each" describes how the (X each side/leg) note is derived:
