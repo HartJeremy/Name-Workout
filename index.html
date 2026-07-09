@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101114" />
+  <title>Name Workout Challenge</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero-card">
+      <div class="hero-copy">
+        <p class="eyebrow">Name Workout Challenge</p>
+        <h1>Build today&rsquo;s letter burn.</h1>
+        <p class="sub">Generate random letters, pull a random word, or type a name. Each letter maps to a move from the challenge chart.</p>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-label">Workout</span>
+        <strong id="heroCount">0</strong>
+        <span class="stat-label">moves</span>
+      </div>
+      <button id="installBtn" class="icon-btn hidden" aria-label="Install app">Install</button>
+    </section>
+
+    <section class="layout">
+      <section class="panel-card builder-card">
+        <div class="section-title">
+          <span>01</span>
+          <h2>Choose generator</h2>
+        </div>
+
+        <div class="segmented" role="tablist" aria-label="Workout mode">
+          <button class="tab active" data-mode="letters">Letters</button>
+          <button class="tab" data-mode="word">Word</button>
+          <button class="tab" data-mode="custom">Name</button>
+        </div>
+
+        <div id="lettersPanel" class="input-panel active">
+          <label for="letterCount">Number of letters</label>
+          <div class="range-row">
+            <input id="letterCount" type="range" min="1" max="26" value="8" />
+            <input id="letterCountNumber" class="number-box" type="number" min="1" max="26" value="8" />
+          </div>
+        </div>
+
+        <div id="wordPanel" class="input-panel">
+          <label for="maxWordLength">Max word length</label>
+          <div class="range-row">
+            <input id="maxWordLength" type="range" min="2" max="15" value="8" />
+            <input id="maxWordLengthNumber" class="number-box" type="number" min="2" max="15" value="8" />
+          </div>
+        </div>
+
+        <div id="customPanel" class="input-panel">
+          <label for="customText">Name, word, or phrase</label>
+          <input id="customText" class="text-box" type="text" placeholder="Jeremy Hart" />
+        </div>
+
+        <div class="section-title small">
+          <span>02</span>
+          <h2>Options</h2>
+        </div>
+
+        <div class="option-grid">
+          <label class="switch-card">
+            <input id="upperCase" type="checkbox" checked />
+            <span><b>Uppercase</b><small>Display draw as JEREMY</small></span>
+          </label>
+          <label class="switch-card">
+            <input id="lowerCase" type="checkbox" />
+            <span><b>Lowercase</b><small>Display draw as jeremy</small></span>
+          </label>
+          <label class="switch-card wide">
+            <input id="allowDuplicates" type="checkbox" checked />
+            <span><b>Allow duplicates</b><small>Letters can repeat in random draws</small></span>
+          </label>
+        </div>
+
+        <div class="section-title small">
+          <span>03</span>
+          <h2>Intensity</h2>
+        </div>
+        <div class="intensity-row">
+          <input id="intensitySlider" type="range" min="0.5" max="3" step="0.25" value="1" />
+          <span id="intensityLabel" class="chip">1x</span>
+        </div>
+        <p class="hint">Scales every rep and second count from the exercise library below.</p>
+
+        <div class="actions">
+          <button id="generateBtn" class="primary">Generate workout</button>
+          <button id="copyBtn" class="secondary">Copy</button>
+          <button id="resetBtn" class="secondary">Reset</button>
+        </div>
+      </section>
+
+      <section class="panel-card result-card">
+        <div class="result-top">
+          <div>
+            <p class="eyebrow">Current draw</p>
+            <h2 id="drawText">Ready</h2>
+          </div>
+          <p id="summary" class="chip">0 moves</p>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+          <div class="pulse-dot"></div>
+          <p>Tap generate and the alphabet turns into a tiny fitness tyrant.</p>
+        </div>
+
+        <ol id="exerciseList" class="exercise-list"></ol>
+        <div id="totals" class="totals"></div>
+      </section>
+    </section>
+
+    <details class="panel-card legend" open>
+      <summary>Exercise library &mdash; tap any field to edit</summary>
+      <div class="editor-toolbar">
+        <button id="resetExercisesBtn" class="secondary">Reset to original</button>
+        <button id="exportExercisesBtn" class="secondary">Export JSON</button>
+        <label class="secondary import-label">
+          Import JSON
+          <input id="importExercisesInput" type="file" accept="application/json" class="hidden" />
+        </label>
+      </div>
+      <div class="editor-head">
+        <span></span><span>Amount</span><span>Unit</span><span>Exercise</span><span>Split</span><span>Label</span>
+      </div>
+      <div id="editorGrid" class="editor-grid"></div>
+    </details>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
