@@ -7,6 +7,16 @@
   <title>Name Workout Challenge</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function (OneSignal) {
+    await OneSignal.init({
+      appId: "f753f501-63a3-42b9-85c9-a8e9a8d5bd30",
+    });
+  });
+</script>
+
 </head>
 <body>
   <main class="app-shell">
