@@ -160,21 +160,20 @@ async function sendSlot(slot) {
       Authorization: `Key ${apiKey}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      app_id: appId,
-      target_channel: 'push',
-      filters: [
-        { field: 'tag', key: 'name_wod_notifications', relation: '=', value: '1' },
-        { operator: 'AND' },
-        { field: 'tag', key: 'name_wod_time', relation: '=', value: time }
-      ],
-      headings: { en: entry.title },
-      contents: { en: entry.message },
-      url: APP_URL,
-      web_url: APP_URL,
-      name: `name-wod-${date}-${time.replace(':', '')}`,
-      idempotency_key: operationKey
-    })
+	body: JSON.stringify({
+	  app_id: appId,
+	  target_channel: 'push',
+	  filters: [
+		{ field: 'tag', key: 'name_wod_notifications', relation: '=', value: '1' },
+		{ operator: 'AND' },
+		{ field: 'tag', key: 'name_wod_time', relation: '=', value: time }
+	  ],
+	  headings: { en: entry.title },
+	  contents: { en: entry.message },
+	  web_url: APP_URL,
+	  name: `name-wod-${date}-${time.replace(':', '')}`,
+	  idempotency_key: operationKey
+	})
   });
 
   const result = await response.json().catch(() => ({}));
