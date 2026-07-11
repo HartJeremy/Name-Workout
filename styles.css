@@ -4,3 +4,6 @@
 @media(max-height:700px){.runner-letter{width:110px;height:110px;border-radius:25px;font-size:4.8rem}.runner-kicker{margin-top:12px}.runner-main h2{font-size:2.3rem}.timer-box{margin-top:10px}.timer-box strong{font-size:2.7rem}}
 
 .utility-setting{cursor:default}.utility-setting label{min-width:0}.time-input{width:104px;height:42px;padding:0 8px;border:1px solid var(--line);border-radius:11px;background:#080808;color:var(--text);font:inherit;font-weight:850;color-scheme:dark}.utility-row:disabled{opacity:.75;cursor:default}.option-grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+
+/* Tomorrow preview */
+.tomorrow-name-card{margin-top:14px;padding:16px;border:1px solid #ffbd1935;border-radius:16px;background:linear-gradient(135deg,#ffbd1910,#080808);text-align:center}.tomorrow-name-card span,.tomorrow-name-card strong,.tomorrow-name-card small{display:block}.tomorrow-name-card span{color:var(--muted);font-size:.7rem;font-weight:950;letter-spacing:.14em;text-transform:uppercase}.tomorrow-name-card strong{margin-top:5px;color:var(--gold);font-size:1.65rem;letter-spacing:.04em}.tomorrow-name-card small{margin-top:4px;color:var(--muted)}

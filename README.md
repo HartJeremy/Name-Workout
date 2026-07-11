@@ -79,3 +79,10 @@ Add one object per date:
 ```
 
 The `note` field is optional and is not used as part of the workout.
+
+## Version 1.0 preview behavior
+
+- The workout preview shows every letter and move.
+- Tomorrow's scheduled name appears below the move list when one exists.
+- Parenthetical notes in the schedule are for clarification only and are never counted as workout letters.
+- No dated entry means no automatic name and no scheduled notification for that date.
