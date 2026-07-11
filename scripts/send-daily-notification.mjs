@@ -3,10 +3,17 @@ import { createHash } from 'node:crypto';
 
 const TIMEZONE = 'America/New_York';
 const APP_URL = 'https://hartjeremy.github.io/Name-Workout/';
-const LOOKBACK_MINUTES = 15;
+const WORKFLOW_FILE = 'daily-name-wod.yml';
+const FALLBACK_LOOKBACK_MINUTES = 15;
+const MAX_LOOKBACK_MINUTES = 24 * 60;
 const SLOT_MINUTES = 5;
+
 const appId = process.env.ONESIGNAL_APP_ID;
 const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+const githubToken = process.env.GITHUB_TOKEN;
+const githubRepository = process.env.GITHUB_REPOSITORY;
+const githubApiUrl = process.env.GITHUB_API_URL || 'https://api.github.com';
+const currentRunId = process.env.GITHUB_RUN_ID;
 
 if (!appId || !apiKey) {
   throw new Error('Missing ONESIGNAL_APP_ID or ONESIGNAL_REST_API_KEY.');
@@ -14,11 +21,17 @@ if (!appId || !apiKey) {
 
 const dateFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: TIMEZONE,
-  year: 'numeric', month: '2-digit', day: '2-digit'
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit'
 });
+
 const timeFormatter = new Intl.DateTimeFormat('en-GB', {
   timeZone: TIMEZONE,
-  hour: '2-digit', minute: '2-digit', hour12: false
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+  hourCycle: 'h23'
 });
 
 const schedule = JSON.parse(
@@ -42,13 +55,88 @@ function floorToSlot(date) {
   return floored;
 }
 
-function recentSlots(now) {
-  const latest = floorToSlot(now);
-  const slots = [];
-  for (let offset = 0; offset <= LOOKBACK_MINUTES; offset += SLOT_MINUTES) {
-    slots.push(new Date(latest.getTime() - offset * 60_000));
+function clampCheckpoint(checkpoint, now) {
+  const oldestAllowed = new Date(now.getTime() - MAX_LOOKBACK_MINUTES * 60_000);
+  if (checkpoint < oldestAllowed) {
+    console.warn(
+      `Previous successful run is more than ${MAX_LOOKBACK_MINUTES} minutes old; ` +
+      `limiting catch-up to the past 24 hours.`
+    );
+    return oldestAllowed;
   }
-  return slots;
+  return checkpoint;
+}
+
+function slotsAfter(checkpoint, now) {
+  const slots = [];
+  let slot = floorToSlot(now);
+
+  while (slot > checkpoint) {
+    slots.push(new Date(slot));
+    slot = new Date(slot.getTime() - SLOT_MINUTES * 60_000);
+  }
+
+  return slots.reverse();
+}
+
+async function getPreviousSuccessfulRunStart(now) {
+  const fallback = new Date(now.getTime() - FALLBACK_LOOKBACK_MINUTES * 60_000);
+
+  if (!githubToken || !githubRepository) {
+    console.warn(
+      'GitHub run history is unavailable; using the 15-minute fallback window.'
+    );
+    return fallback;
+  }
+
+  const workflow = encodeURIComponent(WORKFLOW_FILE);
+  const url =
+    `${githubApiUrl}/repos/${githubRepository}/actions/workflows/${workflow}/runs` +
+    '?status=success&per_page=30';
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'name-wod-notification-runner'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub ${response.status}: ${await response.text()}`);
+    }
+
+    const result = await response.json();
+    const previous = (result.workflow_runs || [])
+      .filter(run => String(run.id) !== String(currentRunId || ''))
+      .filter(run => run.conclusion === 'success')
+      .map(run => ({
+        ...run,
+        checkpoint: new Date(run.run_started_at || run.created_at)
+      }))
+      .filter(run => !Number.isNaN(run.checkpoint.getTime()) && run.checkpoint < now)
+      .sort((a, b) => b.checkpoint - a.checkpoint)[0];
+
+    if (!previous) {
+      console.warn(
+        'No previous successful workflow run was found; using the 15-minute fallback window.'
+      );
+      return fallback;
+    }
+
+    console.log(
+      `Previous successful run: ${previous.id} at ${previous.checkpoint.toISOString()}.`
+    );
+    return clampCheckpoint(previous.checkpoint, now);
+  } catch (error) {
+    console.warn(
+      `Could not read GitHub workflow history (${error.message}); ` +
+      'using the 15-minute fallback window.'
+    );
+    return fallback;
+  }
 }
 
 async function sendSlot(slot) {
@@ -103,6 +191,19 @@ async function sendSlot(slot) {
   );
 }
 
-for (const slot of recentSlots(new Date())) {
-  await sendSlot(slot);
+const now = new Date();
+const checkpoint = await getPreviousSuccessfulRunStart(now);
+const dueSlots = slotsAfter(checkpoint, now);
+
+console.log(
+  `Checking reminder slots after ${checkpoint.toISOString()} through ${now.toISOString()}.`
+);
+
+if (dueSlots.length === 0) {
+  console.log('No five-minute reminder slots are due.');
+} else {
+  console.log(`Processing ${dueSlots.length} reminder slot(s).`);
+  for (const slot of dueSlots) {
+    await sendSlot(slot);
+  }
 }
