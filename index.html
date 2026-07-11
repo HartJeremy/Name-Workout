@@ -55,7 +55,7 @@
 
         <div id="customPanel" class="input-panel">
           <label for="customText">Name, word, or phrase</label>
-          <input id="customText" class="text-box" type="text" placeholder="Enter Name" />
+          <input id="customText" class="text-box" type="text" placeholder="Jeremy Hart" />
         </div>
 
         <div class="section-title small">
@@ -114,7 +114,7 @@
       </section>
     </section>
 
-    <details class="panel-card legend" open>
+    <details class="panel-card legend">
       <summary>Exercise library &mdash; tap any field to edit</summary>
       <div class="editor-toolbar">
         <button id="resetExercisesBtn" class="secondary">Reset to original</button>
@@ -128,6 +128,32 @@
         <span></span><span>Amount</span><span>Unit</span><span>Exercise</span><span>Split</span><span>Label</span>
       </div>
       <div id="editorGrid" class="editor-grid"></div>
+    </details>
+
+    <details class="panel-card legend">
+      <summary>Notifications</summary>
+      <p class="hint" style="margin-top:16px;">Browser notifications only fire while this app is open or was recently open in the background &mdash; there's no server here to push alerts to a closed app. For a true background alert, ask Claude to add real entries to your phone's Reminders app.</p>
+
+      <div class="notif-row">
+        <button id="enableNotifBtn" class="secondary">Enable browser notifications</button>
+        <span id="notifStatus" class="chip">Not enabled</span>
+      </div>
+
+      <label class="switch-card wide" style="margin-top:14px;">
+        <input id="dailyReminderToggle" type="checkbox" />
+        <span><b>Daily workout reminder</b><small>Notify me once a day to do the workout</small></span>
+      </label>
+
+      <div class="row-2col" style="margin-top:12px;">
+        <div>
+          <label for="dailyReminderTime">Reminder time</label>
+          <input id="dailyReminderTime" class="text-box" type="time" value="08:00" />
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button id="testNotifBtn" class="secondary" style="width:100%;">Send test notification</button>
+        </div>
+      </div>
     </details>
   </main>
 
