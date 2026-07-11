@@ -1,0 +1,7 @@
+importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+const CACHE_NAME='name-wod-v9';
+const APP_ASSETS=['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icon-192.png','./icon-512.png','./wod-hero.jpg','./notify-schedule.json','https://cdn.jsdelivr.net/npm/random-words@2.0.1/+esm'];
+self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE_NAME).then(cache=>Promise.all(APP_ASSETS.map(asset=>cache.add(asset).catch(error=>console.warn('Precache failed for',asset,error))))))});
+self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE_NAME).map(key=>caches.delete(key)))).then(()=>self.clients.claim()))});
+self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith(fetch(event.request).then(response=>{if(response.ok||response.type==='opaque'){const copy=response.clone();caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy))}return response}).catch(()=>caches.match(event.request).then(cached=>cached||caches.match('./index.html'))))});
+self.addEventListener('notificationclick',event=>{event.notification.close();event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(clientList=>{for(const client of clientList){if('focus'in client)return client.focus()}return clients.openWindow('./')}))});
