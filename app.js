@@ -1,352 +1,88 @@
 const STORAGE_KEY = 'nameWorkoutExercises';
+const RECENT_NAMES_KEY = 'nameWorkoutRecentNames';
+const DAILY_NAME_ENABLED_KEY = 'nameWorkoutDailyNameEnabled';
+const NOTIFICATION_TIME_KEY = 'nameWorkoutNotificationTime';
+const DEFAULT_FIRST_NAME = '';
+const SCHEDULE_URL = 'notify-schedule.json';
+const TIMEZONE = 'America/New_York';
+const APP_PATH = '/Name-Workout/';
+const ONE_SIGNAL_APP_ID = 'f753f501-63a3-42b9-85c9-a8e9a8d5bd30';
+const DICTIONARY_MODULE_URL = 'https://cdn.jsdelivr.net/npm/random-words@2.0.1/+esm';
+let dictionaryModulePromise = null;
 
-// Source: "The Name Workout Challenge" poster. amount/unit is the base rep or
-// second count; "each" describes how the (X each side/leg) note is derived:
-//   'split'   -> note shows half of amount, e.g. 10 total -> "(5 each leg)"
-//   'perSide' -> amount IS the per-side count, note just labels it
-//   null      -> no note
 const DEFAULT_EXERCISES = {
-  A: { amount: 5,  unit: 'reps', name: 'Burpees' },
-  B: { amount: 10, unit: 'reps', name: 'Crunches' },
-  C: { amount: 10, unit: 'reps', name: 'Squats' },
-  D: { amount: 30, unit: 'sec',  name: 'Bridge' },
-  E: { amount: 10, unit: 'reps', name: 'Squats' },
-  F: { amount: 30, unit: 'sec',  name: 'Plank' },
-  G: { amount: 10, unit: 'reps', name: 'Lunges', each: 'split', eachLabel: 'leg' },
-  H: { amount: 10, unit: 'reps', name: 'Leg Raises' },
-  I: { amount: 10, unit: 'reps', name: 'Side Lunges', each: 'split', eachLabel: 'side' },
-  J: { amount: 15, unit: 'reps', name: 'Bicycle Crunches' },
-  K: { amount: 10, unit: 'reps', name: 'Reverse Lunges', each: 'split', eachLabel: 'leg' },
-  L: { amount: 10, unit: 'reps', name: 'Toe Touches' },
-  M: { amount: 10, unit: 'reps', name: 'Single-Leg Squats', each: 'split', eachLabel: 'leg' },
-  N: { amount: 10, unit: 'reps', name: 'Bent-Leg Jackknives' },
-  O: { amount: 20, unit: 'reps', name: 'Jumping Jacks' },
-  P: { amount: 20, unit: 'reps', name: 'Cross-Country Skiers' },
-  Q: { amount: 20, unit: 'reps', name: 'Scissor Kicks' },
-  R: { amount: 20, unit: 'reps', name: 'Mountain Climbers' },
-  S: { amount: 20, unit: 'reps', name: 'High Knees' },
-  T: { amount: 20, unit: 'reps', name: 'Mountain Climbers' },
-  U: { amount: 15, unit: 'reps', name: 'Clamshells', each: 'perSide', eachLabel: 'side' },
-  V: { amount: 15, unit: 'reps', name: 'Side Leg Lifts', each: 'perSide', eachLabel: 'side' },
-  W: { amount: 15, unit: 'reps', name: 'Glute Leg Lifts' },
-  X: { amount: 15, unit: 'reps', name: 'Superman Lifts' },
-  Y: { amount: 15, unit: 'reps', name: 'Supermans' },
-  Z: { amount: 15, unit: 'reps', name: 'Donkey Kicks', each: 'perSide', eachLabel: 'leg' }
+  A:{amount:5,unit:'reps',name:'Burpees'},B:{amount:10,unit:'reps',name:'Crunches'},C:{amount:10,unit:'reps',name:'Squats'},D:{amount:30,unit:'sec',name:'Bridge'},E:{amount:10,unit:'reps',name:'Squats'},F:{amount:30,unit:'sec',name:'Plank'},G:{amount:10,unit:'reps',name:'Lunges',each:'split',eachLabel:'leg'},H:{amount:10,unit:'reps',name:'Leg Raises'},I:{amount:10,unit:'reps',name:'Side Lunges',each:'split',eachLabel:'side'},J:{amount:15,unit:'reps',name:'Bicycle Crunches'},K:{amount:10,unit:'reps',name:'Reverse Lunges',each:'split',eachLabel:'leg'},L:{amount:10,unit:'reps',name:'Toe Touches'},M:{amount:10,unit:'reps',name:'Single-Leg Squats',each:'split',eachLabel:'leg'},N:{amount:10,unit:'reps',name:'Bent-Leg Jackknives'},O:{amount:20,unit:'reps',name:'Jumping Jacks'},P:{amount:20,unit:'reps',name:'Cross-Country Skiers'},Q:{amount:20,unit:'reps',name:'Scissor Kicks'},R:{amount:20,unit:'reps',name:'Mountain Climbers'},S:{amount:20,unit:'reps',name:'High Knees'},T:{amount:20,unit:'reps',name:'Mountain Climbers'},U:{amount:15,unit:'reps',name:'Clamshells',each:'perSide',eachLabel:'side'},V:{amount:15,unit:'reps',name:'Side Leg Lifts',each:'perSide',eachLabel:'side'},W:{amount:15,unit:'reps',name:'Glute Leg Lifts'},X:{amount:15,unit:'reps',name:'Superman Lifts'},Y:{amount:15,unit:'reps',name:'Supermans'},Z:{amount:15,unit:'reps',name:'Donkey Kicks',each:'perSide',eachLabel:'leg'}
 };
 
-const words = [
-  'dragon','burpee','squat','plank','sweat','chaos','strong','lunge','rocket','winner',
-  'runner','coffee','theatre','fitness','goblin','cardio','grit','power','focus','stride',
-  'pickle','wizard','sunrise','beast','engine','spark','tempo','quest','motion','active'
-];
-
 const $ = id => document.getElementById(id);
-let mode = 'letters';
+let mode = 'custom';
 let deferredPrompt;
 let exercises = loadExercises();
 let intensity = 1;
-let lastDraw = '';
 let lastRawLetters = '';
 let lastWorkout = [];
+let workoutDisplayName = '';
+let oneSignalInstance = null;
+let todayScheduleEntry = null;
+let scheduleData = [];
+let dailyNameEnabled = localStorage.getItem(DAILY_NAME_ENABLED_KEY) !== 'false';
+let currentMove = 0;
+let completedMoves = new Set();
+let timerInterval = null;
+let timerRemaining = 0;
+let wakeLock = null;
+const previewTimers = new Map();
 
-function loadExercises() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved && typeof saved === 'object') {
-      const merged = {};
-      Object.keys(DEFAULT_EXERCISES).forEach(letter => {
-        merged[letter] = { ...DEFAULT_EXERCISES[letter], ...(saved[letter] || {}) };
-      });
-      return merged;
-    }
-  } catch (e) { /* fall through to defaults */ }
-  return JSON.parse(JSON.stringify(DEFAULT_EXERCISES));
-}
 
-function saveExercises() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(exercises));
-}
+function todayISO(){return new Intl.DateTimeFormat('en-CA',{timeZone:TIMEZONE,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}
+function applyScheduledName(){const input=$('customText');if(!dailyNameEnabled||!todayScheduleEntry?.name){if(input.dataset.scheduledName==='true')input.value='';input.removeAttribute('data-scheduled-name');return}input.value=normalizeFirstName(todayScheduleEntry.name);input.dataset.scheduledName='true'}
+async function loadTodaySchedule(){try{const response=await fetch(SCHEDULE_URL,{cache:'no-store'});if(!response.ok)throw new Error(`Schedule returned ${response.status}`);scheduleData=await response.json();todayScheduleEntry=scheduleData.find(entry=>entry.date===todayISO())||null;if(!todayScheduleEntry)console.warn('No Name WOD schedule entry for',todayISO())}catch(error){scheduleData=[];todayScheduleEntry=null;console.warn('Could not load today’s Name WOD schedule.',error)}applyScheduledName()}
 
-function resetExercises() {
-  exercises = JSON.parse(JSON.stringify(DEFAULT_EXERCISES));
-  saveExercises();
-  renderEditor();
-  if (lastRawLetters) applyDraw(lastRawLetters);
-}
+function loadExercises(){try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY));if(saved&&typeof saved==='object')return Object.fromEntries(Object.keys(DEFAULT_EXERCISES).map(letter=>[letter,{...DEFAULT_EXERCISES[letter],...(saved[letter]||{})}]));}catch(error){console.warn('Could not load saved exercises.',error)}return structuredClone(DEFAULT_EXERCISES)}
+function saveExercises(){localStorage.setItem(STORAGE_KEY,JSON.stringify(exercises))}
+function normalizeFirstName(value){const clean=String(value||'').replace(/[^A-Za-z'’-]/g,' ').trim();const first=clean.split(/\s+/)[0]||'';return first.slice(0,24)}
+function loadRecentNames(){try{const saved=JSON.parse(localStorage.getItem(RECENT_NAMES_KEY))||[];const cleaned=[...new Set(saved.map(normalizeFirstName).filter(Boolean))].slice(0,6);if(JSON.stringify(saved)!==JSON.stringify(cleaned))localStorage.setItem(RECENT_NAMES_KEY,JSON.stringify(cleaned));return cleaned}catch{return[]}}
+function rememberName(name){if(mode!=='custom')return;const firstName=normalizeFirstName(name);if(!firstName)return;const names=[firstName,...loadRecentNames().filter(item=>item.toLowerCase()!==firstName.toLowerCase())].slice(0,6);localStorage.setItem(RECENT_NAMES_KEY,JSON.stringify(names));renderRecentNames()}
+function renderRecentNames(){const names=loadRecentNames();$('recentNames').innerHTML=names.map(name=>`<button class="recent-name" type="button" data-name="${escapeHtml(name)}">${escapeHtml(name)}</button>`).join('');document.querySelectorAll('.recent-name').forEach(button=>button.addEventListener('click',()=>{$('customText').value=button.dataset.name;$('customText').focus()}))}
+function escapeHtml(value){return String(value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]))}
+function setMode(next){mode=next;document.querySelectorAll('.tab').forEach(button=>{const active=button.dataset.mode===mode;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});document.querySelectorAll('.input-panel').forEach(panel=>panel.classList.remove('active'));$(`${mode}Panel`).classList.add('active')}
+function randomLetters(count,allowDuplicates){const available=[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];const result=[];for(let index=0;index<count;index+=1){if(!allowDuplicates&&available.length===0)break;const source=allowDuplicates?[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ']:available;const selectedIndex=Math.floor(Math.random()*source.length);result.push(source[selectedIndex]);if(!allowDuplicates)available.splice(selectedIndex,1)}return result.join('')}
+function loadDictionaryModule(){if(!dictionaryModulePromise)dictionaryModulePromise=import(DICTIONARY_MODULE_URL).catch(error=>{console.warn('Dictionary module failed to load.',error);dictionaryModulePromise=null;return null});return dictionaryModulePromise}
+async function randomWord(maxLength,allowDuplicates){const mod=await loadDictionaryModule();if(mod){for(let attempt=0;attempt<100;attempt+=1){const word=mod.generate({minLength:3,maxLength});if(typeof word!=='string')continue;if(allowDuplicates||new Set(word.toLowerCase()).size===word.length)return word}}return randomLetters(maxLength,allowDuplicates).toLowerCase()}
+async function getDraw(){const allowDuplicates=$('allowDuplicates').checked;if(mode==='custom'){const firstName=normalizeFirstName($('customText').value);$('customText').value=firstName;return firstName;}if(mode==='word')return await randomWord(Number($('maxWordLength').value||8),allowDuplicates);return randomLetters(Number($('letterCount').value||8),allowDuplicates)}
+function formatExercise(entry,multiplier){let amount;if(entry.unit==='sec'){amount=Math.max(5,Math.round((entry.amount*multiplier)/5)*5)}else if(entry.each==='split'){amount=Math.max(2,Math.round((entry.amount*multiplier)/2)*2)}else{amount=Math.max(1,Math.round(entry.amount*multiplier))}let detail='';let displayAmount=amount;if(entry.each==='split'){detail=`${amount/2} each ${entry.eachLabel}`}else if(entry.each==='perSide'){if(entry.unit!=='sec')displayAmount=amount*2;detail=`${amount} each ${entry.eachLabel}`}return{amount:displayAmount,headline:entry.unit==='sec'?`${displayAmount}-second ${entry.name}`:`${displayAmount} ${entry.name}`,detail}}
+function buildWorkout(raw){return raw.toUpperCase().replace(/[^A-Z]/g,'').split('').map(letter=>{const entry=exercises[letter];if(!entry)return null;const formatted=formatExercise(entry,intensity);return{letter,name:entry.name,unit:entry.unit,amount:formatted.amount,headline:formatted.headline,detail:formatted.detail,each:entry.each,eachLabel:entry.eachLabel}}).filter(Boolean)}
+function displayName(raw){const clean=mode==='custom'?normalizeFirstName(raw):String(raw).replace(/[^A-Za-z]/g,'').trim();return $('upperCase').checked?clean.toUpperCase():clean}
+async function buildWorkoutFromInput(){const raw=await getDraw();const workout=buildWorkout(raw);if(!workout.length){$('customText').focus();return}lastRawLetters=raw;lastWorkout=workout;workoutDisplayName=displayName(raw);rememberName(raw);renderPreview();$('previewCard').classList.remove('hidden');$('previewCard').scrollIntoView({behavior:'smooth',block:'start'})}
+function clearPreviewTimers(){previewTimers.forEach(state=>{if(state.interval)clearInterval(state.interval)});previewTimers.clear()}
+function togglePreviewTimer(button){const index=button.dataset.index;const seconds=Number(button.dataset.seconds);const label=button.querySelector('.timer-btn-time');const state=previewTimers.get(index)||{remaining:seconds,interval:null};if(state.interval){clearInterval(state.interval);state.interval=null;button.classList.remove('running');label.textContent=`${state.remaining}s`;previewTimers.set(index,state);return}if(state.remaining<=0)state.remaining=seconds;button.classList.remove('done');button.classList.add('running');label.textContent=`${state.remaining}s`;state.interval=setInterval(()=>{state.remaining-=1;if(state.remaining<=0){clearInterval(state.interval);state.interval=null;state.remaining=0;button.classList.remove('running');button.classList.add('done');label.textContent='DONE';vibrate([120,80,120]);previewTimers.set(index,state);return}label.textContent=`${state.remaining}s`;previewTimers.set(index,state)},1000);previewTimers.set(index,state)}
+function renderPreview(){clearPreviewTimers();$('drawText').textContent=workoutDisplayName;$('heroCount').textContent=lastWorkout.length;$('movesPill').textContent=`${lastWorkout.length} MOVE${lastWorkout.length===1?'':'S'}`;$('workoutTagline').textContent=mode==='custom'?`${workoutDisplayName} is today’s workout. Spell every letter in sweat.`:'Every letter earns a move.';const shown=lastWorkout.slice(0,6);$('exercisePreview').innerHTML=shown.map((item,index)=>`<div class="preview-move"><span class="preview-letter">${item.letter}</span><span><b>${escapeHtml(item.headline)}</b><small>${item.detail?escapeHtml(item.detail):'Complete the full amount'}</small></span>${item.unit==='sec'?`<button class="preview-timer-btn" type="button" data-index="${index}" data-seconds="${item.amount}"><span class="timer-btn-time">${item.amount}s</span></button>`:`<em class="preview-index">${index+1}</em>`}</div>`).join('')+(lastWorkout.length>6?`<p class="more-moves">+ ${lastWorkout.length-6} more moves</p>`:'');document.querySelectorAll('.preview-timer-btn').forEach(button=>button.addEventListener('click',()=>togglePreviewTimer(button)));const totals=lastWorkout.reduce((map,item)=>{const key=`${item.name}|${item.unit}`;if(!map[key])map[key]={name:item.name,unit:item.unit,sum:0};map[key].sum+=item.amount;return map},{});$('totals').innerHTML=Object.values(totals).map(total=>`<span class="total">${total.sum}${total.unit==='sec'?' sec':''} ${escapeHtml(total.name)}</span>`).join('')}
+async function copyWorkout(){if(!lastWorkout.length)return;const lines=[`${workoutDisplayName} is today’s Name WOD.`,'',...lastWorkout.map((item,index)=>`${index+1}. ${item.letter}: ${item.headline}${item.detail?` (${item.detail})`:''}`),'','Spell it. Sweat it.'];try{if(navigator.share)await navigator.share({title:`${workoutDisplayName} Name WOD`,text:lines.join('\n')});else await navigator.clipboard.writeText(lines.join('\n'))}catch(error){if(error.name!=='AbortError')console.error('Share failed.',error)}}
+async function requestWakeLock(){if(!('wakeLock'in navigator))return;try{wakeLock=await navigator.wakeLock.request('screen');$('wakeBtn').textContent='☀';$('wakeBtn').title='Screen will stay awake'}catch(error){console.warn('Wake lock unavailable.',error)}}
+async function releaseWakeLock(){try{await wakeLock?.release()}catch{}wakeLock=null}
+function startWorkout(){if(!lastWorkout.length)return;currentMove=0;completedMoves=new Set();$('runner').classList.remove('hidden');document.body.style.overflow='hidden';requestWakeLock();renderRunner()}
+function renderRunner(){clearTimer();const item=lastWorkout[currentMove];$('runnerName').textContent=workoutDisplayName||'TODAY’S WOD';$('runnerProgressText').textContent=`${currentMove+1} OF ${lastWorkout.length}`;$('progressBar').style.width=`${(completedMoves.size/lastWorkout.length)*100}%`;$('runnerLetter').textContent=item.letter;$('runnerExercise').textContent=item.headline;$('runnerSplit').textContent=item.detail;$('prevMoveBtn').disabled=currentMove===0;$('completeMoveBtn').querySelector('span').textContent=completedMoves.has(currentMove)?'COMPLETED':'DONE';if(item.unit==='sec'){$('timerBox').classList.remove('hidden');timerRemaining=item.amount;updateTimerDisplay()}else $('timerBox').classList.add('hidden')}
+function updateTimerDisplay(){$('timerValue').textContent=timerRemaining;$('timerBtn').textContent=timerInterval?'PAUSE TIMER':timerRemaining===0?'RESET TIMER':'START TIMER'}
+function clearTimer(){if(timerInterval)clearInterval(timerInterval);timerInterval=null}
+function toggleTimer(){const item=lastWorkout[currentMove];if(timerRemaining===0)timerRemaining=item.amount;if(timerInterval){clearTimer();updateTimerDisplay();return}timerInterval=setInterval(()=>{timerRemaining-=1;updateTimerDisplay();if(timerRemaining<=0){clearTimer();timerRemaining=0;updateTimerDisplay();vibrate([120,80,120]);completeCurrentMove()}},1000);updateTimerDisplay()}
+function vibrate(pattern=30){if($('vibrationToggle').checked&&navigator.vibrate)navigator.vibrate(pattern)}
+function completeCurrentMove(){completedMoves.add(currentMove);vibrate(40);if(completedMoves.size>=lastWorkout.length){finishWorkout();return}let next=currentMove+1;while(next<lastWorkout.length&&completedMoves.has(next))next+=1;if(next>=lastWorkout.length)next=[...Array(lastWorkout.length).keys()].find(index=>!completedMoves.has(index))??currentMove;currentMove=next;renderRunner()}
+function finishWorkout(){clearTimer();releaseWakeLock();$('runner').classList.add('hidden');$('finishTitle').innerHTML=`${escapeHtml(workoutDisplayName)}<br>CONQUERED.`;$('finishStats').textContent=`${lastWorkout.length} moves finished. Name officially defeated.`;$('finishScreen').classList.remove('hidden');vibrate([100,70,100,70,180])}
+function exitRunner(){clearTimer();releaseWakeLock();$('runner').classList.add('hidden');document.body.style.overflow=''}
+function closeFinish(){$('finishScreen').classList.add('hidden');document.body.style.overflow=''}
+function syncRange(rangeId,outputId){const range=$(rangeId),output=$(outputId);const sync=()=>output.textContent=range.value;range.addEventListener('input',sync);sync()}
+function renderEditor(){const units=['reps','sec'];const options=[{value:'',label:'No split'},{value:'split',label:'Split half'},{value:'perSide',label:'Per side'}];$('editorGrid').innerHTML=Object.entries(exercises).map(([letter,entry])=>`<div class="editor-row" data-letter="${letter}"><span class="editor-letter">${letter}</span><input class="editor-amount" type="number" min="1" value="${entry.amount}"><select class="editor-unit">${units.map(unit=>`<option value="${unit}" ${entry.unit===unit?'selected':''}>${unit}</option>`).join('')}</select><input class="editor-name" value="${escapeHtml(entry.name)}"><select class="editor-each">${options.map(option=>`<option value="${option.value}" ${entry.each===option.value||(!entry.each&&!option.value)?'selected':''}>${option.label}</option>`).join('')}</select><input class="editor-label" value="${escapeHtml(entry.eachLabel||'')}" placeholder="side/leg" ${entry.each?'':'disabled'}></div>`).join('');document.querySelectorAll('.editor-row').forEach(row=>{const letter=row.dataset.letter,amount=row.querySelector('.editor-amount'),unit=row.querySelector('.editor-unit'),name=row.querySelector('.editor-name'),each=row.querySelector('.editor-each'),label=row.querySelector('.editor-label');const commit=()=>{exercises[letter]={amount:Math.max(1,Number(amount.value)||1),unit:unit.value,name:name.value.trim()||DEFAULT_EXERCISES[letter].name,each:each.value||undefined,eachLabel:label.value.trim()||undefined};label.disabled=!each.value;saveExercises();if(lastRawLetters){lastWorkout=buildWorkout(lastRawLetters);renderPreview()}};[amount,unit,name,each,label].forEach(control=>control.addEventListener('change',commit))})}
+function setNotificationStatus(text,detail){$('notifStatus').textContent=text;$('subscriptionDetail').textContent=detail}
+function normalizeNotificationTime(value){return /^([01]\d|2[0-3]):[0-5]\d$/.test(value||'')?value:'07:00'}
+function getNotificationTime(){return normalizeNotificationTime(localStorage.getItem(NOTIFICATION_TIME_KEY)||'07:00')}
+async function syncNotificationPreferences(){if(!oneSignalInstance)return;const enabled=oneSignalInstance.User.PushSubscription.optedIn===true;const time=getNotificationTime();$('notificationTime').value=time;if(enabled){oneSignalInstance.User.addTags({name_wod_notifications:'1',name_wod_time:time,name_wod_timezone:TIMEZONE})}else{oneSignalInstance.User.addTag('name_wod_notifications','0')}}
+function refreshNotificationStatus(){if(!oneSignalInstance)return;const subscription=oneSignalInstance.User.PushSubscription,id=subscription.id,optedIn=subscription.optedIn,permission=oneSignalInstance.Notifications.permission;const button=$('enableNotificationsBtn');button.disabled=false;if(permission&&optedIn&&id){setNotificationStatus('On',`Daily reminder at ${getNotificationTime()} ET. Tap to turn off.`);$('testNotificationBtn').classList.remove('hidden')}else if(Notification.permission==='denied'){setNotificationStatus('Blocked','Enable notifications in device settings, then reopen the app.');$('testNotificationBtn').classList.add('hidden')}else{setNotificationStatus('Off','Tap to turn on daily workout reminders.');$('testNotificationBtn').classList.add('hidden')}}
+async function showTestNotification(){try{if(Notification.permission!=='granted'){setNotificationStatus('Not enabled','Enable notifications above before sending a test.');return}const name=workoutDisplayName||displayName($('customText').value);if(!name){setNotificationStatus('No name selected','Enter a name or use a date with a scheduled workout.');return}const message=`Today's workout name is ${name}. Open the app to start.`;const registration=await navigator.serviceWorker.ready;await registration.showNotification('Your Name WOD is ready',{body:message,icon:'icon-192.png',badge:'icon-192.png',tag:'name-wod-test'})}catch(error){console.error('Test notification failed.',error);setNotificationStatus('Test failed',error.message||'The test notification could not be sent.')}}
+async function registerServiceWorker(){if(!('serviceWorker'in navigator))return;try{const registration=await navigator.serviceWorker.register('sw.js',{scope:APP_PATH});console.log('Service worker registered.',registration.scope)}catch(error){console.error('Service worker registration failed.',error)}}
+window.OneSignalDeferred=window.OneSignalDeferred||[];window.OneSignalDeferred.push(async OneSignal=>{try{await OneSignal.init({appId:ONE_SIGNAL_APP_ID,serviceWorkerPath:'/Name-Workout/sw.js',serviceWorkerParam:{scope:APP_PATH},notifyButton:{enable:false},allowLocalhostAsSecureOrigin:true});oneSignalInstance=OneSignal;OneSignal.User.PushSubscription.addEventListener('change',async()=>{await syncNotificationPreferences();refreshNotificationStatus()});await syncNotificationPreferences();refreshNotificationStatus()}catch(error){console.error('OneSignal initialization failed.',error);setNotificationStatus('Setup error',error.message||'OneSignal could not initialize.')}});
+registerServiceWorker();
 
-function setMode(next) {
-  mode = next;
-  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-  document.querySelectorAll('.input-panel').forEach(p => p.classList.remove('active'));
-  $(`${mode}Panel`).classList.add('active');
-}
-
-function formatLetters(str) {
-  if ($('lowerCase').checked && !$('upperCase').checked) return str.toLowerCase();
-  return str.toUpperCase();
-}
-
-function randomLetters(count, allowDuplicates) {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  const out = [];
-  for (let i = 0; i < count; i++) {
-    if (!allowDuplicates && alphabet.length === 0) break;
-    const source = allowDuplicates ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('') : alphabet;
-    const index = Math.floor(Math.random() * source.length);
-    out.push(source[index]);
-    if (!allowDuplicates) alphabet.splice(index, 1);
-  }
-  return out.join('');
-}
-
-function randomWord(maxLength, allowDuplicates) {
-  const candidates = words.filter(w => w.length <= maxLength && (allowDuplicates || new Set(w).size === w.length));
-  if (candidates.length) return candidates[Math.floor(Math.random() * candidates.length)];
-  return randomLetters(maxLength, allowDuplicates);
-}
-
-function getDraw() {
-  const allowDuplicates = $('allowDuplicates').checked;
-  if (mode === 'custom') return $('customText').value || 'Jeremy Hart';
-  if (mode === 'word') return randomWord(Number($('maxWordLength').value || 8), allowDuplicates);
-  return randomLetters(Number($('letterCount').value || 8), allowDuplicates);
-}
-
-// Scales an entry's amount by the intensity multiplier and formats display text.
-function formatExercise(entry, multiplier) {
-  let amount;
-  if (entry.unit === 'sec') {
-    amount = Math.max(5, Math.round((entry.amount * multiplier) / 5) * 5);
-  } else {
-    amount = Math.max(1, Math.round(entry.amount * multiplier));
-  }
-
-  let main = entry.unit === 'sec' ? `${entry.name} \u2013 ${amount} sec` : `${amount} ${entry.name}`;
-  let note = '';
-  if (entry.each === 'split') {
-    const half = Math.max(1, Math.round(amount / 2));
-    note = ` (${half} each ${entry.eachLabel})`;
-  } else if (entry.each === 'perSide') {
-    note = ` (each ${entry.eachLabel})`;
-  }
-  return { text: main + note, amount };
-}
-
-function buildWorkout(raw) {
-  const letters = raw.toUpperCase().replace(/[^A-Z]/g, '').split('');
-  return letters
-    .map(letter => {
-      const entry = exercises[letter];
-      if (!entry) return null;
-      const formatted = formatExercise(entry, intensity);
-      return {
-        letter,
-        exercise: formatted.text,
-        name: entry.name,
-        unit: entry.unit,
-        amount: formatted.amount,
-        each: entry.each,
-        eachLabel: entry.eachLabel
-      };
-    })
-    .filter(Boolean);
-}
-
-function applyDraw(raw) {
-  const workout = buildWorkout(raw);
-  const display = formatLetters(raw.replace(/[^A-Za-z]/g, '')) || 'No letters found';
-  lastDraw = display;
-  lastRawLetters = raw;
-  lastWorkout = workout;
-  $('drawText').textContent = display;
-  $('summary').textContent = `${workout.length} move${workout.length === 1 ? '' : 's'}`;
-  $('heroCount').textContent = workout.length;
-  $('emptyState').classList.toggle('hidden', workout.length > 0);
-  $('exerciseList').innerHTML = workout.map((x, index) => `<li><span class="letter-badge">${x.letter}</span><span><span class="move-name">${x.exercise}</span><span class="move-meta">Round ${index + 1}</span></span></li>`).join('');
-
-  // Group by exercise name/unit/split-style and SUM the actual reps or seconds,
-  // instead of showing "2x 20 Burpees" show the real total "40 Burpees".
-  const totalsMap = workout.reduce((acc, x) => {
-    const key = `${x.name}|${x.unit}|${x.each || ''}|${x.eachLabel || ''}`;
-    if (!acc[key]) acc[key] = { name: x.name, unit: x.unit, each: x.each, eachLabel: x.eachLabel, sum: 0 };
-    acc[key].sum += x.amount;
-    return acc;
-  }, {});
-
-  $('totals').innerHTML = Object.values(totalsMap).map(t => {
-    let label;
-    if (t.unit === 'sec') {
-      label = `${t.sum} sec ${t.name}`;
-    } else {
-      let note = '';
-      if (t.each === 'split') note = ` (${Math.max(1, Math.round(t.sum / 2))} each ${t.eachLabel})`;
-      else if (t.each === 'perSide') note = ` (each ${t.eachLabel})`;
-      label = `${t.sum} ${t.name}${note}`;
-    }
-    return `<div class="total"><b>${label}</b></div>`;
-  }).join('');
-}
-
-function render() {
-  applyDraw(getDraw());
-}
-
-function copyWorkout() {
-  const lines = [
-    lastDraw || $('drawText').textContent,
-    '',
-    ...lastWorkout.map((x, i) => `${i + 1}. ${x.letter}: ${x.exercise}`)
-  ];
-  navigator.clipboard?.writeText(lines.join('\n'));
-}
-
-function reset() {
-  lastDraw = '';
-  lastRawLetters = '';
-  lastWorkout = [];
-  $('drawText').textContent = 'Ready';
-  $('summary').textContent = '0 moves';
-  $('heroCount').textContent = '0';
-  $('emptyState').classList.remove('hidden');
-  $('exerciseList').innerHTML = '';
-  $('totals').innerHTML = '';
-}
-
-document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode)));
-$('generateBtn').addEventListener('click', render);
-$('copyBtn').addEventListener('click', copyWorkout);
-$('resetBtn').addEventListener('click', reset);
-$('upperCase').addEventListener('change', () => { if ($('upperCase').checked) $('lowerCase').checked = false; });
-$('lowerCase').addEventListener('change', () => { if ($('lowerCase').checked) $('upperCase').checked = false; });
-
-window.addEventListener('beforeinstallprompt', event => {
-  event.preventDefault();
-  deferredPrompt = event;
-  $('installBtn').classList.remove('hidden');
-});
-$('installBtn').addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt = null;
-  $('installBtn').classList.add('hidden');
-});
-
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-
-function syncPair(rangeId, numberId) {
-  const range = $(rangeId);
-  const number = $(numberId);
-  const sync = source => {
-    const min = Number(source.min);
-    const max = Number(source.max);
-    const value = Math.min(max, Math.max(min, Number(source.value || min)));
-    range.value = value;
-    number.value = value;
-  };
-  range.addEventListener('input', () => sync(range));
-  number.addEventListener('input', () => sync(number));
-}
-syncPair('letterCount', 'letterCountNumber');
-syncPair('maxWordLength', 'maxWordLengthNumber');
-
-// ---- Intensity slider ----
-function updateIntensityLabel() {
-  const clean = intensity.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
-  $('intensityLabel').textContent = `${clean}x`;
-}
-$('intensitySlider').addEventListener('input', e => {
-  intensity = Number(e.target.value);
-  updateIntensityLabel();
-  if (lastRawLetters) applyDraw(lastRawLetters);
-});
-intensity = Number($('intensitySlider').value);
-updateIntensityLabel();
-
-// ---- Exercise editor ----
-const UNIT_OPTIONS = ['reps', 'sec'];
-const EACH_OPTIONS = [
-  { value: '', label: 'No split' },
-  { value: 'split', label: 'Split (half each)' },
-  { value: 'perSide', label: 'Per side (as listed)' }
-];
-
-function renderEditor() {
-  const grid = $('editorGrid');
-  grid.innerHTML = Object.keys(exercises).map(letter => {
-    const e = exercises[letter];
-    const unitOpts = UNIT_OPTIONS.map(u => `<option value="${u}" ${e.unit === u ? 'selected' : ''}>${u}</option>`).join('');
-    const eachOpts = EACH_OPTIONS.map(o => `<option value="${o.value}" ${(e.each || '') === o.value ? 'selected' : ''}>${o.label}</option>`).join('');
-    return `
-      <div class="editor-row" data-letter="${letter}">
-        <span class="editor-letter">${letter}</span>
-        <input class="number-box editor-amount" type="number" min="1" value="${e.amount}" aria-label="${letter} amount" />
-        <select class="editor-unit" aria-label="${letter} unit">${unitOpts}</select>
-        <input class="text-box editor-name" type="text" value="${e.name}" aria-label="${letter} exercise name" />
-        <select class="editor-each" aria-label="${letter} split style">${eachOpts}</select>
-        <input class="text-box editor-eachlabel" type="text" placeholder="leg / side" value="${e.eachLabel || ''}" aria-label="${letter} split label" ${e.each ? '' : 'disabled'} />
-      </div>`;
-  }).join('');
-
-  grid.querySelectorAll('.editor-row').forEach(row => {
-    const letter = row.dataset.letter;
-    const amountEl = row.querySelector('.editor-amount');
-    const unitEl = row.querySelector('.editor-unit');
-    const nameEl = row.querySelector('.editor-name');
-    const eachEl = row.querySelector('.editor-each');
-    const eachLabelEl = row.querySelector('.editor-eachlabel');
-
-    const commit = () => {
-      exercises[letter] = {
-        amount: Math.max(1, Number(amountEl.value) || 1),
-        unit: unitEl.value,
-        name: nameEl.value.trim() || exercises[letter].name,
-        each: eachEl.value || undefined,
-        eachLabel: eachLabelEl.value.trim() || undefined
-      };
-      eachLabelEl.disabled = !eachEl.value;
-      saveExercises();
-      if (lastRawLetters) applyDraw(lastRawLetters);
-    };
-
-    amountEl.addEventListener('change', commit);
-    unitEl.addEventListener('change', commit);
-    nameEl.addEventListener('change', commit);
-    eachEl.addEventListener('change', commit);
-    eachLabelEl.addEventListener('change', commit);
-  });
-}
-
-$('resetExercisesBtn').addEventListener('click', () => {
-  if (confirm('Reset all exercises back to the original Name Workout Challenge list?')) resetExercises();
-});
-
-$('exportExercisesBtn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(exercises, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'name-workout-exercises.json';
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-$('importExercisesInput').addEventListener('change', async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  try {
-    const text = await file.text();
-    const parsed = JSON.parse(text);
-    Object.keys(DEFAULT_EXERCISES).forEach(letter => {
-      if (parsed[letter]) exercises[letter] = { ...exercises[letter], ...parsed[letter] };
-    });
-    saveExercises();
-    renderEditor();
-    if (lastRawLetters) applyDraw(lastRawLetters);
-  } catch (err) {
-    alert('Could not read that file as exercise JSON.');
-  }
-  e.target.value = '';
-});
-
-renderEditor();
-
+$('generateBtn').addEventListener('click',buildWorkoutFromInput);$('customText').addEventListener('input',event=>{const original=event.target.value;const cleaned=normalizeFirstName(original);if(/\s/.test(original.trim()))event.target.value=cleaned});$('customText').addEventListener('blur',event=>{event.target.value=normalizeFirstName(event.target.value)});$('customText').addEventListener('keydown',event=>{if(event.key==='Enter')buildWorkoutFromInput()});$('clearNameBtn').addEventListener('click',()=>{$('customText').value='';$('customText').focus()});document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.mode)));$('intensitySelect').addEventListener('change',()=>{intensity=Number($('intensitySelect').value);if(lastRawLetters){lastWorkout=buildWorkout(lastRawLetters);renderPreview()}});$('upperCase').addEventListener('change',()=>{if(lastRawLetters){workoutDisplayName=displayName(lastRawLetters);renderPreview()}});$('startBtn').addEventListener('click',startWorkout);$('copyBtn').addEventListener('click',copyWorkout);$('editBtn').addEventListener('click',()=>{$('previewCard').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});$('customText').focus()});$('exitRunnerBtn').addEventListener('click',exitRunner);$('completeMoveBtn').addEventListener('click',completeCurrentMove);$('skipMoveBtn').addEventListener('click',()=>{currentMove=(currentMove+1)%lastWorkout.length;renderRunner()});$('prevMoveBtn').addEventListener('click',()=>{if(currentMove>0){currentMove-=1;renderRunner()}});$('timerBtn').addEventListener('click',toggleTimer);$('wakeBtn').addEventListener('click',()=>wakeLock?releaseWakeLock():requestWakeLock());$('finishCloseBtn').addEventListener('click',closeFinish);$('finishAgainBtn').addEventListener('click',()=>{closeFinish();$('previewCard').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});$('customText').select()});$('settingsBtn').addEventListener('click',()=>{$('settingsPanel').open=true;$('settingsPanel').scrollIntoView({behavior:'smooth'})});$('enableNotificationsBtn').addEventListener('click',async()=>{if(!oneSignalInstance){setNotificationStatus('Loading','OneSignal is still starting. Try again shortly.');return}try{const subscription=oneSignalInstance.User.PushSubscription;if(subscription.optedIn){await subscription.optOut();oneSignalInstance.User.addTag('name_wod_notifications','0')}else{const granted=oneSignalInstance.Notifications.permission||await oneSignalInstance.Notifications.requestPermission();if(granted){await subscription.optIn();await syncNotificationPreferences()}}refreshNotificationStatus()}catch(error){setNotificationStatus('Could not update',error.message||'Notification preference failed.')}});$('notificationTime').addEventListener('change',async event=>{const time=normalizeNotificationTime(event.target.value);event.target.value=time;localStorage.setItem(NOTIFICATION_TIME_KEY,time);await syncNotificationPreferences();refreshNotificationStatus()});$('testNotificationBtn').addEventListener('click',showTestNotification);
+$('dailyNameToggle').checked=dailyNameEnabled;$('dailyNameToggle').addEventListener('change',event=>{dailyNameEnabled=event.target.checked;localStorage.setItem(DAILY_NAME_ENABLED_KEY,String(dailyNameEnabled));applyScheduledName()});$('notificationTime').value=getNotificationTime();syncRange('letterCount','letterCountNumber');syncRange('maxWordLength','maxWordLengthNumber');renderRecentNames();renderEditor();setMode('custom');loadTodaySchedule();
+$('resetExercisesBtn').addEventListener('click',()=>{if(!confirm('Reset all exercises to the original list?'))return;exercises=structuredClone(DEFAULT_EXERCISES);saveExercises();renderEditor()});$('exportExercisesBtn').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(exercises,null,2)],{type:'application/json'}));const anchor=document.createElement('a');anchor.href=url;anchor.download='name-wod-exercises.json';anchor.click();URL.revokeObjectURL(url)});$('importExercisesInput').addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file)return;try{const imported=JSON.parse(await file.text());Object.keys(DEFAULT_EXERCISES).forEach(letter=>{if(imported[letter])exercises[letter]={...exercises[letter],...imported[letter]}});saveExercises();renderEditor()}catch{alert('That file is not valid exercise JSON.')}event.target.value=''});
+window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredPrompt=event;$('installBtn').classList.remove('hidden')});$('installBtn').addEventListener('click',async()=>{if(!deferredPrompt)return;await deferredPrompt.prompt();deferredPrompt=null;$('installBtn').classList.add('hidden')});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!$('runner').classList.contains('hidden')&&!wakeLock)requestWakeLock()});

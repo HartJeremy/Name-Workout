@@ -1,146 +1,164 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#101114" />
-  <title>Name Workout Challenge</title>
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090909">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Name WOD">
+  <meta name="description" content="Turn a first name into today's workout of the day.">
+  <title>Name WOD</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function (OneSignal) {
-      await OneSignal.init({
-        appId: "f753f501-63a3-42b9-85c9-a8e9a8d5bd30",
-      });
-    });
-  </script>
 </head>
 <body>
   <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Name WOD home">
+        <img src="icon-192.png" alt="" width="50" height="50">
+        <span><b>NAME</b><strong>WOD</strong></span>
+      </a>
+      <div class="top-actions">
+        <button id="installBtn" class="ghost-btn hidden" type="button">Install</button>
+        <button id="settingsBtn" class="icon-btn" type="button" aria-label="Open settings">⚙</button>
+      </div>
+    </header>
+
     <section class="hero-card">
+      <div class="hero-art" aria-hidden="true"><img src="wod-hero.jpg" alt=""></div>
       <div class="hero-copy">
-        <p class="eyebrow">Name Workout Challenge</p>
-        <h1>Build today&rsquo;s letter burn.</h1>
-        <p class="sub">Generate random letters, pull a random word, or type a name. Each letter maps to a move from the challenge chart.</p>
+        <p class="eyebrow">Workout of the day</p>
+        <h1>Spell it.<br><span>Sweat it.</span></h1>
+        <p>Choose a first name. Every letter unlocks the next move.</p>
       </div>
-      <div class="hero-stat">
-        <span class="stat-label">Workout</span>
-        <strong id="heroCount">0</strong>
-        <span class="stat-label">moves</span>
-      </div>
-      <button id="installBtn" class="icon-btn hidden" aria-label="Install app">Install</button>
     </section>
 
-    <section class="layout">
-      <section class="panel-card builder-card">
-        <div class="section-title">
-          <span>01</span>
-          <h2>Choose generator</h2>
-        </div>
+    <section class="builder-card" aria-labelledby="builderTitle">
+      <div class="card-heading">
+        <div><p class="eyebrow">Build today’s WOD</p><h2 id="builderTitle">Which first name are we doing?</h2></div>
+        <span id="movesPill" class="step-pill">PICK A NAME</span>
+      </div>
 
-        <div class="segmented" role="tablist" aria-label="Workout mode">
-          <button class="tab" data-mode="custom">Name</button>
-          <button class="tab active" data-mode="letters">Letters</button>
-          <button class="tab" data-mode="word">Word</button>
-        </div>
+      <div class="segmented" role="tablist" aria-label="Workout source">
+        <button class="tab active" type="button" data-mode="custom" role="tab" aria-selected="true">Name</button>
+        <button class="tab" type="button" data-mode="letters" role="tab" aria-selected="false">Letters</button>
+        <button class="tab" type="button" data-mode="word" role="tab" aria-selected="false">Word</button>
+      </div>
 
-        <div id="lettersPanel" class="input-panel active">
-          <label for="letterCount">Number of letters</label>
-          <div class="range-row">
-            <input id="letterCount" type="range" min="1" max="26" value="8" />
-            <input id="letterCountNumber" class="number-box" type="number" min="1" max="26" value="8" />
-          </div>
+      <div id="customPanel" class="input-panel active">
+        <label for="customText">Today’s first name</label>
+        <div class="name-input-wrap">
+          <input id="customText" class="text-box name-input" type="text" value="" placeholder="Loading today’s name…" maxlength="24" autocomplete="given-name" enterkeyhint="go" autocapitalize="words">
+          <button id="clearNameBtn" class="clear-btn" type="button" aria-label="Clear name">×</button>
         </div>
+        <div id="recentNames" class="recent-names" aria-label="Recent names"></div>
+      </div>
 
-        <div id="wordPanel" class="input-panel">
-          <label for="maxWordLength">Max word length</label>
-          <div class="range-row">
-            <input id="maxWordLength" type="range" min="2" max="15" value="8" />
-            <input id="maxWordLengthNumber" class="number-box" type="number" min="2" max="15" value="8" />
-          </div>
+      <div id="lettersPanel" class="input-panel">
+        <label for="letterCount">How many letters?</label>
+        <div class="range-row">
+          <input id="letterCount" type="range" min="1" max="26" value="8">
+          <output id="letterCountNumber" class="range-value">8</output>
         </div>
+      </div>
 
-        <div id="customPanel" class="input-panel">
-          <label for="customText">Name, word, or phrase</label>
-          <input id="customText" class="text-box" type="text" placeholder="Name" />
+      <div id="wordPanel" class="input-panel">
+        <label for="maxWordLength">Maximum word length</label>
+        <div class="range-row">
+          <input id="maxWordLength" type="range" min="3" max="15" value="8">
+          <output id="maxWordLengthNumber" class="range-value">8</output>
         </div>
+        <p class="hint">Words come from a dictionary package, not a hard-coded list.</p>
+      </div>
 
-        <div class="section-title small">
-          <span>02</span>
-          <h2>Options</h2>
-        </div>
+      <div class="quick-options">
+        <label class="compact-control"><span>Intensity</span><select id="intensitySelect"><option value="0.5">Light 0.5×</option><option value="0.75">Easy 0.75×</option><option value="1" selected>Standard 1×</option><option value="1.25">Spicy 1.25×</option><option value="1.5">Hard 1.5×</option><option value="2">Savage 2×</option></select></label>
+        <label class="toggle-control"><input id="allowDuplicates" type="checkbox" checked><span>Count repeat letters</span></label>
+      </div>
 
+      <button id="generateBtn" class="primary jumbo" type="button"><span>BUILD THE WORKOUT</span><small>Map every letter to a move</small></button>
+    </section>
+
+    <section id="previewCard" class="preview-card hidden" aria-live="polite">
+      <div class="preview-header">
+        <div><p class="eyebrow">Today’s workout is</p><h2 id="drawText">READY</h2><p id="workoutTagline">Every letter earns a move.</p></div>
+        <div class="move-count"><strong id="heroCount">0</strong><span>moves</span></div>
+      </div>
+      <div id="exercisePreview" class="exercise-preview"></div>
+      <div id="totals" class="totals"></div>
+      <div class="preview-actions">
+        <button id="startBtn" class="primary jumbo" type="button"><span>START WORKOUT</span><small>Keep the screen awake</small></button>
+        <button id="copyBtn" class="secondary" type="button">Share workout</button>
+        <button id="editBtn" class="secondary" type="button">Change name</button>
+      </div>
+    </section>
+
+    <section class="utility-card">
+      <button id="enableNotificationsBtn" class="utility-row" type="button"><span class="utility-icon">◉</span><span><b>Workout reminders</b><small id="subscriptionDetail">Checking notification setup…</small></span><em id="notifStatus">Checking</em></button>
+      <div class="utility-row utility-setting">
+        <span class="utility-icon">◷</span>
+        <label for="notificationTime"><b>Reminder time</b><small>Saved for this device in Eastern Time</small></label>
+        <input id="notificationTime" class="time-input" type="time" value="07:00" step="300" aria-label="Daily reminder time">
+      </div>
+      <button id="testNotificationBtn" class="utility-row hidden" type="button"><span class="utility-icon">↗</span><span><b>Send a test reminder</b><small>Preview today’s workout message</small></span><em>Test</em></button>
+    </section>
+
+    <details id="settingsPanel" class="settings-card">
+      <summary>Workout settings and exercise library</summary>
+      <div class="settings-body">
         <div class="option-grid">
-          <label class="switch-card">
-            <input id="upperCase" type="checkbox" checked />
-            <span><b>Uppercase</b><small>Display draw as JEREMY</small></span>
-          </label>
-          <label class="switch-card">
-            <input id="lowerCase" type="checkbox" />
-            <span><b>Lowercase</b><small>Display draw as jeremy</small></span>
-          </label>
-          <label class="switch-card wide">
-            <input id="allowDuplicates" type="checkbox" checked />
-            <span><b>Allow duplicates</b><small>Letters can repeat in random draws</small></span>
-          </label>
+          <label class="toggle-control"><input id="dailyNameToggle" type="checkbox" checked><span>Fill in today’s scheduled name</span></label>
+          <label class="toggle-control"><input id="upperCase" type="checkbox" checked><span>Show workout in uppercase</span></label>
+          <label class="toggle-control"><input id="vibrationToggle" type="checkbox" checked><span>Vibrate when a move is completed</span></label>
         </div>
-
-        <div class="section-title small">
-          <span>03</span>
-          <h2>Intensity</h2>
+        <div class="editor-toolbar">
+          <button id="resetExercisesBtn" class="secondary" type="button">Reset exercises</button>
+          <button id="exportExercisesBtn" class="secondary" type="button">Export JSON</button>
+          <label class="secondary import-label">Import JSON<input id="importExercisesInput" type="file" accept="application/json" hidden></label>
         </div>
-        <div class="intensity-row">
-          <input id="intensitySlider" type="range" min="0.5" max="3" step="0.25" value="1" />
-          <span id="intensityLabel" class="chip">1x</span>
-        </div>
-        <p class="hint">Scales every rep and second count from the exercise library below.</p>
-
-        <div class="actions">
-          <button id="generateBtn" class="primary">Generate workout</button>
-          <button id="copyBtn" class="secondary">Copy</button>
-          <button id="resetBtn" class="secondary">Reset</button>
-        </div>
-      </section>
-
-      <section class="panel-card result-card">
-        <div class="result-top">
-          <div>
-            <p class="eyebrow">Current draw</p>
-            <h2 id="drawText">Ready</h2>
-          </div>
-          <p id="summary" class="chip">0 moves</p>
-        </div>
-
-        <div id="emptyState" class="empty-state">
-          <div class="pulse-dot"></div>
-          <p>Tap generate and the alphabet turns into a tiny fitness tyrant.</p>
-        </div>
-
-        <ol id="exerciseList" class="exercise-list"></ol>
-        <div id="totals" class="totals"></div>
-      </section>
-    </section>
-
-    <details class="panel-card legend">
-      <summary>Exercise library &mdash; tap any field to edit</summary>
-      <div class="editor-toolbar">
-        <button id="resetExercisesBtn" class="secondary">Reset to original</button>
-        <button id="exportExercisesBtn" class="secondary">Export JSON</button>
-        <label class="secondary import-label">
-          Import JSON
-          <input id="importExercisesInput" type="file" accept="application/json" class="hidden" />
-        </label>
+        <div class="editor-head"><span></span><span>Amount</span><span>Unit</span><span>Exercise</span><span>Split</span><span>Label</span></div>
+        <div id="editorGrid" class="editor-grid"></div>
       </div>
-      <div class="editor-head">
-        <span></span><span>Amount</span><span>Unit</span><span>Exercise</span><span>Split</span><span>Label</span>
-      </div>
-      <div id="editorGrid" class="editor-grid"></div>
     </details>
-
   </main>
 
-  <script src="app.js"></script>
+  <section id="runner" class="runner hidden" aria-label="Active workout">
+    <div class="runner-top">
+      <button id="exitRunnerBtn" class="runner-icon" type="button" aria-label="Exit workout">×</button>
+      <div class="runner-title"><small id="runnerName">TODAY’S WOD</small><b id="runnerProgressText">1 OF 8</b></div>
+      <button id="wakeBtn" class="runner-icon" type="button" aria-label="Keep screen awake">☀</button>
+    </div>
+    <div class="progress-track"><span id="progressBar"></span></div>
+    <div class="runner-main">
+      <div id="runnerLetter" class="runner-letter">J</div>
+      <p class="runner-kicker">YOUR NEXT MOVE</p>
+      <h2 id="runnerExercise">15 Bicycle Crunches</h2>
+      <p id="runnerSplit" class="runner-split"></p>
+      <div id="timerBox" class="timer-box hidden">
+        <strong id="timerValue">30</strong><span>SECONDS</span>
+        <button id="timerBtn" class="timer-button" type="button">START TIMER</button>
+      </div>
+    </div>
+    <div class="runner-bottom">
+      <button id="prevMoveBtn" class="runner-secondary" type="button">Back</button>
+      <button id="completeMoveBtn" class="runner-complete" type="button"><span>DONE</span><small>Tap and keep moving</small></button>
+      <button id="skipMoveBtn" class="runner-secondary" type="button">Skip</button>
+    </div>
+  </section>
+
+  <section id="finishScreen" class="finish-screen hidden">
+    <img src="icon-192.png" alt="" width="120" height="120">
+    <p class="eyebrow">WOD complete</p>
+    <h2 id="finishTitle">JEREMY<br>CONQUERED.</h2>
+    <p id="finishStats">10 moves finished.</p>
+    <button id="finishAgainBtn" class="primary jumbo" type="button"><span>BUILD ANOTHER</span><small>Choose the next first name</small></button>
+    <button id="finishCloseBtn" class="secondary" type="button">Review workout</button>
+  </section>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>
