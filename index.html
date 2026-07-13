@@ -13,7 +13,7 @@
   <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <!--<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>-->
 </head>
 <body>
   <main class="app-shell">
@@ -101,7 +101,7 @@
       </div>
     </section>
 
-    <section class="utility-card">
+    <section id="notificationSettings" class="utility-card" hidden>
       <button id="enableNotificationsBtn" class="utility-row" type="button"><span class="utility-icon">◉</span><span><b>Workout reminders</b><small id="subscriptionDetail">Checking notification setup…</small></span><em id="notifStatus">Checking</em></button>
       <div class="utility-row utility-setting">
         <span class="utility-icon">◷</span>
