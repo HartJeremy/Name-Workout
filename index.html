@@ -77,7 +77,7 @@
       </div>
 
       <div class="quick-options">
-        <label class="compact-control"><span>Intensity</span><select id="intensitySelect"><option value="0.5">Light 0.5×</option><option value="0.75">Easy 0.75×</option><option value="1" selected>Standard 1×</option><option value="1.25">Spicy 1.25×</option><option value="1.5">Hard 1.5×</option><option value="2">Savage 2×</option></select></label>
+        <div class="intensity-control"><div class="intensity-heading"><span>Intensity</span><strong id="intensityLabel">Locked In 1×</strong></div><input id="intensityRange" class="intensity-slider" type="range" min="0" max="5" step="1" value="2" aria-label="Workout intensity" aria-valuetext="Locked In 1×"><div class="intensity-scale" aria-hidden="true"><span>0.5×</span><span>0.75×</span><span>1×</span><span>1.25×</span><span>1.5×</span><span>2×</span></div></div>
         <label class="toggle-control"><input id="allowDuplicates" type="checkbox" checked><span>Count repeat letters</span></label>
       </div>
 
