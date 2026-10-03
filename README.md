@@ -4,7 +4,7 @@
 
 Mobile-first PWA with D20 as the default workout mode. Mode-aware tagline: D20 “Roll it. Sweat it. Build it.”; Name “Spell it. Sweat it. Build it.”; Letters “Draw it. Sweat it. Build it.”; Word “Pick it. Sweat it. Build it.” Name, random letters, and dictionary word modes remain available.
 
-The bulb mascot is **Max**, kept intentionally subtle as an Easter egg. Tapping the bulb artwork reveals one of Max’s rotating messages without changing the main AMPED branding.
+The bulb mascot is **Max**, kept intentionally subtle as an Easter egg. Tapping the bulb artwork reveals one of Max’s rotating funny-but-motivational messages without changing the main AMPED branding. The mobile layout also respects iOS safe areas so the header controls remain below the status bar when installed to the Home Screen.
 
 ## Ready-to-deploy files
 
@@ -98,3 +98,10 @@ The `note` field is optional and is not used as part of the workout.
 - Tomorrow's scheduled name appears below the move list when one exists.
 - Parenthetical notes in the schedule are for clarification only and are never counted as workout letters.
 - No dated entry means no automatic name and no scheduled notification for that date.
+
+
+## Timed side changes
+For any timed exercise configured as Split half or Per side, AMPED flashes a SWITCH SIDES/LEGS/etc. cue at the halfway point and vibrates when vibration is enabled.
+
+### Max Easter egg
+Tap the bulb artwork to reveal one of Max's rotating hidden electrical/workout jokes.

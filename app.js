@@ -34,17 +34,49 @@ const FINISH_MESSAGES = [
 // Max is the bulb mascot. He stays intentionally subtle as an Easter egg.
 const MAX_MESSAGES = [
   'Max is fully charged.',
-  'Max says: keep it moving.',
-  'Max approves this level of chaos.',
   'Max has an idea. It involves reps.',
-  'Current status: AMPED.',
-  'Max says: one more.',
   'Max was told this was a light workout.',
-  'Max says: build first, complain later.',
-  'Max is glowing. That seems promising.',
-  'Max says: good choice. Probably.'
+  'Current status: AMPED.',
+  'Max brought the energy. You bring the reps.',
+  'Max says the circuit is live.',
+  'Max says the bulb is on. Your turn.',
+  'Max is operating at maximum wattage.',
+  'Max says this one has potential.',
+  'Max says today\'s forecast: 100% chance of reps.',
+  'Max is glowing with questionable confidence.',
+  'Max says that\'s enough thinking.',
+  'Max says resistance is part of the circuit.',
+  'Max is suspiciously excited about burpees.',
+  'Max says this looked easier on paper.',
+  'Max says don\'t blame the dice.',
+  'Max claims the D20 made him do it.',
+  'Max says it\'s only a few reps. He may be lying.',
+  'Max has zero muscles and many opinions.',
+  'Max says sweat is just the cooling system.',
+  'Max says no warranty coverage for skipped reps.',
+  'Max says one more won\'t trip the breaker.',
+  'Max is monitoring your voltage.',
+  'Max says consider this a power cycle.',
+  'Max says your rest period is under review.',
+  'Max says you\'re cleared for full power.',
+  'Max says the switch only works if you flip it.',
+  'Max says the current plan is: keep moving.',
+  'Max says every rep adds a little charge.',
+  'Max says low battery still counts as battery.',
+  'Max says the meter is moving in the right direction.',
+  'Max says you\'ve got enough juice for one more.',
+  'Max says this is how you build a stronger circuit.',
+  'Max says the light stays on until the workout is done.',
+  'Max says power up. No dramatic montage required.',
+  'Max says progress is currently flowing.',
+  'Max says your output is looking suspiciously good.',
+  'Max says this workout is now officially energized.',
+  'Max says the breaker is holding. Keep going.',
+  'Max says you\'re more charged than you think.'
 ];
 let maxToastTimer = null;
+let lastMaxMessageIndex = -1;
+let switchFlashTimer = null;
 
 const INTENSITY_LEVELS = [
   {value:0.5,label:'✨ Spark',color:'#45c4e8'},
@@ -159,6 +191,7 @@ let currentMove = 0;
 let completedMoves = new Set();
 let timerInterval = null;
 let timerRemaining = 0;
+let timerSwitchTriggered = false;
 let wakeLock = null;
 const previewTimers = new Map();
 
@@ -411,16 +444,42 @@ function formatExercise(entry,multiplier){
   else amount = Math.max(1,Math.round(entry.amount*multiplier));
   let detail = '';
   let displayAmount = amount;
-  if(entry.each === 'split') detail = `${amount/2} each ${entry.eachLabel}`;
-  else if(entry.each === 'perSide'){
-    if(entry.unit !== 'sec') displayAmount = amount*2;
-    detail = `${amount} each ${entry.eachLabel}`;
+  if(entry.each === 'split'){
+    detail = entry.unit === 'sec' ? `${amount/2} sec each ${entry.eachLabel}` : `${amount/2} each ${entry.eachLabel}`;
+  }else if(entry.each === 'perSide'){
+    displayAmount = amount*2;
+    detail = entry.unit === 'sec' ? `${amount} sec each ${entry.eachLabel}` : `${amount} each ${entry.eachLabel}`;
   }
   return {
     amount:displayAmount,
     headline:entry.unit === 'sec' ? `${displayAmount}-second ${entry.name}` : `${displayAmount} ${entry.name}`,
     detail
   };
+}
+
+function timedSideSwitchAt(item){
+  if(!item || item.unit !== 'sec' || !item.each || Number(item.amount) < 2) return null;
+  return Math.floor(Number(item.amount)/2);
+}
+function switchCueText(item){
+  const label = String(item?.eachLabel || 'side').trim().toLowerCase();
+  const labels = {side:'SWITCH SIDES',leg:'SWITCH LEGS',arm:'SWITCH ARMS',shoulder:'SWITCH SHOULDERS'};
+  return labels[label] || `SWITCH ${label.toUpperCase()}`;
+}
+function showSwitchCue(item){
+  const cue = $('switchFlash');
+  if(!cue) return;
+  const strong = document.createElement('strong');
+  const small = document.createElement('small');
+  strong.textContent = switchCueText(item);
+  small.textContent = 'HALFWAY';
+  cue.replaceChildren(strong,small);
+  cue.classList.remove('show');
+  void cue.offsetWidth;
+  cue.classList.add('show');
+  if(switchFlashTimer) clearTimeout(switchFlashTimer);
+  switchFlashTimer = setTimeout(()=>{cue.classList.remove('show');cue.replaceChildren()},1250);
+  vibrate([100,60,100,60,180]);
 }
 
 function entryToMove(entry,marker,sourceRoll = null){
@@ -475,7 +534,12 @@ async function buildWorkoutFromInput(){
 function showMaxMessage(){
   const toast = $('maxToast');
   if(!toast) return;
-  const message = MAX_MESSAGES[secureRandomInt(MAX_MESSAGES.length)];
+  let messageIndex = secureRandomInt(MAX_MESSAGES.length);
+  if(MAX_MESSAGES.length > 1 && messageIndex === lastMaxMessageIndex){
+    messageIndex = (messageIndex + 1 + secureRandomInt(MAX_MESSAGES.length - 1)) % MAX_MESSAGES.length;
+  }
+  lastMaxMessageIndex = messageIndex;
+  const message = MAX_MESSAGES[messageIndex];
   toast.textContent = message;
   toast.classList.add('show');
   if(maxToastTimer) clearTimeout(maxToastTimer);
@@ -634,8 +698,10 @@ function clearPreviewTimers(){
 function togglePreviewTimer(button){
   const index = button.dataset.index;
   const seconds = Number(button.dataset.seconds);
+  const item = lastWorkout[Number(index)];
+  const switchAt = timedSideSwitchAt(item);
   const label = button.querySelector('.timer-btn-time');
-  const state = previewTimers.get(index) || {remaining:seconds,interval:null};
+  const state = previewTimers.get(index) || {remaining:seconds,interval:null,switchTriggered:false};
   if(state.interval){
     clearInterval(state.interval);
     state.interval = null;
@@ -644,12 +710,16 @@ function togglePreviewTimer(button){
     previewTimers.set(index,state);
     return;
   }
-  if(state.remaining <= 0) state.remaining = seconds;
+  if(state.remaining <= 0){state.remaining = seconds;state.switchTriggered = false}
   button.classList.remove('done');
   button.classList.add('running');
   label.textContent = `${state.remaining}s`;
   state.interval = setInterval(() => {
     state.remaining -= 1;
+    if(switchAt !== null && !state.switchTriggered && state.remaining === switchAt){
+      state.switchTriggered = true;
+      showSwitchCue(item);
+    }
     if(state.remaining <= 0){
       clearInterval(state.interval);
       state.interval = null;
@@ -759,6 +829,7 @@ function renderRunner(){
   if(item.unit === 'sec'){
     $('timerBox').classList.remove('hidden');
     timerRemaining = item.amount;
+    timerSwitchTriggered = false;
     updateTimerDisplay();
   }else $('timerBox').classList.add('hidden');
 }
@@ -769,11 +840,16 @@ function updateTimerDisplay(){
 function clearTimer(){if(timerInterval) clearInterval(timerInterval);timerInterval=null}
 function toggleTimer(){
   const item = lastWorkout[currentMove];
-  if(timerRemaining === 0) timerRemaining = item.amount;
+  const switchAt = timedSideSwitchAt(item);
+  if(timerRemaining === 0){timerRemaining = item.amount;timerSwitchTriggered = false}
   if(timerInterval){clearTimer();updateTimerDisplay();return}
   timerInterval = setInterval(() => {
     timerRemaining -= 1;
     updateTimerDisplay();
+    if(switchAt !== null && !timerSwitchTriggered && timerRemaining === switchAt){
+      timerSwitchTriggered = true;
+      showSwitchCue(item);
+    }
     if(timerRemaining <= 0){
       clearTimer();
       timerRemaining = 0;

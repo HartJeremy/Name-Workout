@@ -1,3 +1,25 @@
+# v11 — Better Max + timed side-switch cue
+
+## v12 - Max Easter egg expansion
+- Restored Max's original hidden-character tone.
+- Expanded the Max Easter egg to 40 short electrical/workout lines.
+- Kept the switch-sides timer behavior from v11.
+- Bumped the PWA cache to `amped-v21`.
+
+- Rewrote Max's Easter-egg messages with a shorter, drier funny/motivational voice.
+- Timed exercises marked `Split half` or `Per side` now flash a full-screen switch cue at the halfway point.
+- Switch cue uses vibration when enabled.
+- Timed `Per side` exercises now correctly include both sides in the total countdown.
+- Timed split details explicitly show seconds per side.
+- Service-worker cache bumped to `amped-v20`.
+
+## Version 2.8
+
+- Adds iPhone/iOS safe-area spacing at the top of the app so the AMPED header and Settings button sit below the status bar, battery, notch, and Dynamic Island when launched from the Home Screen.
+- Expands Max's hidden Easter-egg messages into a larger funny-but-motivational rotation.
+- Prevents Max from immediately repeating the same message twice.
+- Bumps the PWA cache to v19.
+
 # AMPED changelog
 
 ## v9 — Mobile brand fix
