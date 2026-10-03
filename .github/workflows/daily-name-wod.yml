@@ -1,4 +1,4 @@
-name: Daily Name WOD notification
+name: Daily AMPED notification
 
 on:
   schedule:
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Send due Name WOD reminders
+      - name: Send due AMPED reminders
         env:
           GITHUB_TOKEN: ${{ github.token }}
           ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}

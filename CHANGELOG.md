@@ -1,4 +1,28 @@
-# Name WOD update
+# AMPED update
+
+## v8 — Max Easter egg
+
+- Named the AMPED bulb mascot **Max** without changing the app name or primary branding.
+- Added a hidden tap target over the bulb artwork that reveals rotating Max messages.
+- Added accessible labeling so the mascot has a real identity without adding visible UI clutter.
+- Bumped the service-worker cache to `amped-v17`.
+
+## v7 — AMPED branding
+
+- Renamed the public app from **WOD Lab** to **AMPED**.
+- Updated install metadata, page title, header branding, reminders, workflow labels, and exercise export filename.
+- Updated the app icon from **WOD** to **AMPED** while retaining the bulb character and black/gold theme.
+- Kept the existing `/Name-Workout/` deployment path and legacy browser-storage / notification keys so current installs and preferences continue working.
+- Bumped the service-worker cache to `amped-v16`.
+
+
+## v6 — WOD Lab branding
+
+- Renamed the public app from **Name WOD** to **WOD Lab**.
+- Updated the header, install/PWA metadata, notification titles, and user-facing copy.
+- Kept the existing `/Name-Workout/` GitHub Pages path and legacy storage/notification identifiers for backward compatibility.
+- Bumped the service-worker cache to `wod-lab-v15`.
+
 
 ## Version 2.1
 

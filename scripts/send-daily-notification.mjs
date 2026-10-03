@@ -100,7 +100,7 @@ async function getPreviousSuccessfulRunStart(now) {
         Authorization: `Bearer ${githubToken}`,
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
-        'User-Agent': 'name-wod-notification-runner'
+        'User-Agent': 'amped-notification-runner'
       }
     });
 
@@ -145,7 +145,7 @@ async function sendSlot(slot) {
   const matches = schedule.filter(entry => entry.date === date);
 
   if (matches.length === 0) {
-    console.log(`No Name WOD scheduled for ${date}; skipped ${time}.`);
+    console.log(`No Name workout scheduled for ${date}; skipped ${time}.`);
     return;
   }
   if (matches.length > 1) {

@@ -1,6 +1,10 @@
-# Name WOD
+# AMPED
+
+> **Compatibility note:** The public app name is **AMPED**. The existing GitHub repository/path `Name-Workout`, workflow filename, OneSignal tag keys, and browser storage keys are intentionally retained so current installs, URLs, preferences, and notifications keep working.
 
 Mobile-first PWA with D20 as the default workout mode. Mode-aware tagline: D20 “Roll it. Sweat it. Build it.”; Name “Spell it. Sweat it. Build it.”; Letters “Draw it. Sweat it. Build it.”; Word “Pick it. Sweat it. Build it.” Name, random letters, and dictionary word modes remain available.
+
+The bulb mascot is **Max**, kept intentionally subtle as an Easter egg. Tapping the bulb artwork reveals one of Max’s rotating messages without changing the main AMPED branding.
 
 ## Ready-to-deploy files
 
@@ -80,7 +84,7 @@ Add one object per date:
 {
   "date": "2026-09-11",
   "name": "Alex",
-  "title": "Today's Name WOD: ALEX",
+  "title": "AMPED: ALEX",
   "message": "Today's workout name is ALEX. Open the app to start.",
   "note": "optional clarification"
 }

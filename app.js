@@ -31,6 +31,21 @@ const FINISH_MESSAGES = [
   'BUILT FOR MORE.'
 ];
 
+// Max is the bulb mascot. He stays intentionally subtle as an Easter egg.
+const MAX_MESSAGES = [
+  'Max is fully charged.',
+  'Max says: keep it moving.',
+  'Max approves this level of chaos.',
+  'Max has an idea. It involves reps.',
+  'Current status: AMPED.',
+  'Max says: one more.',
+  'Max was told this was a light workout.',
+  'Max says: build first, complain later.',
+  'Max is glowing. That seems promising.',
+  'Max says: good choice. Probably.'
+];
+let maxToastTimer = null;
+
 const INTENSITY_LEVELS = [
   {value:0.5,label:'✨ Spark',color:'#45c4e8'},
   {value:0.75,label:'🔋 Energized',color:'#55d187'},
@@ -237,12 +252,12 @@ async function loadTodaySchedule(){
     scheduleData = await response.json();
     scheduleLoaded = true;
     todayScheduleEntry = scheduleData.find(entry => entry.date === todayISO()) || null;
-    if(!todayScheduleEntry) console.warn('No Name WOD schedule entry for',todayISO());
+    if(!todayScheduleEntry) console.warn('No Name workout schedule entry for',todayISO());
   }catch(error){
     scheduleData = [];
     scheduleLoaded = false;
     todayScheduleEntry = null;
-    console.warn('Could not load today’s Name WOD schedule.',error);
+    console.warn('Could not load today’s Name workout schedule.',error);
   }
   applyScheduledName();
   updateNameModeAvailability();
@@ -455,6 +470,17 @@ async function buildWorkoutFromInput(){
   lastD20WorkoutRoll = null;
   rememberName(raw);
   showPreview();
+}
+
+function showMaxMessage(){
+  const toast = $('maxToast');
+  if(!toast) return;
+  const message = MAX_MESSAGES[secureRandomInt(MAX_MESSAGES.length)];
+  toast.textContent = message;
+  toast.classList.add('show');
+  if(maxToastTimer) clearTimeout(maxToastTimer);
+  maxToastTimer = setTimeout(()=>toast.classList.remove('show'),2600);
+  vibrate(20);
 }
 
 function secureRandomInt(max){
@@ -832,7 +858,7 @@ async function showTestNotification(){
     if(!name){setNotificationStatus('No workout selected','Build a workout before sending a test.');return}
     const message=`Today's workout is ${name}. Open the app to start.`;
     const registration=await navigator.serviceWorker.ready;
-    await registration.showNotification('Your Name WOD is ready',{body:message,icon:'icon-192.png',badge:'icon-192.png',tag:'name-wod-test'});
+    await registration.showNotification('Your AMPED workout is ready',{body:message,icon:'icon-192.png',badge:'icon-192.png',tag:'name-wod-test'});
   }catch(error){console.error('Test notification failed.',error);setNotificationStatus('Test failed',error.message||'The test notification could not be sent.')}
 }
 async function registerServiceWorker(){
@@ -857,7 +883,7 @@ async function initializeNotifications(){
   await registerServiceWorker();
 }
 function initializeNotificationFeature(){
-  if(!ENABLE_NOTIFICATIONS){hideNotificationControls();console.log('Name WOD notifications are disabled.');return}
+  if(!ENABLE_NOTIFICATIONS){hideNotificationControls();console.log('AMPED notifications are disabled.');return}
   initializeNotifications();
   $('enableNotificationsBtn')?.addEventListener('click',async()=>{
     if(!oneSignalInstance){setNotificationStatus('Loading','OneSignal is still starting. Try again shortly.');return}
@@ -905,6 +931,7 @@ $('wakeBtn').addEventListener('click',()=>wakeLock?releaseWakeLock():requestWake
 $('finishCloseBtn').addEventListener('click',closeFinish);
 $('finishAgainBtn').addEventListener('click',()=>{closeFinish();$('previewCard').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});if(mode==='custom')$('customText').select()});
 $('settingsBtn').addEventListener('click',()=>{$('settingsPanel').open=true;$('settingsPanel').scrollIntoView({behavior:'smooth'})});
+$('maxMascot')?.addEventListener('click',showMaxMessage);
 
 document.querySelectorAll('input[name="d20Mode"]').forEach(input=>input.addEventListener('change',()=>{resetD20Rolls();updateD20Controls()}));
 $('d20AutoRoll').addEventListener('change',()=>{resetD20Rolls();updateD20Controls()});
@@ -941,7 +968,7 @@ $('exportExercisesBtn').addEventListener('click',()=>{
   const url=URL.createObjectURL(new Blob([JSON.stringify(exercises,null,2)],{type:'application/json'}));
   const anchor=document.createElement('a');
   anchor.href=url;
-  anchor.download='name-wod-exercises.json';
+  anchor.download='amped-exercises.json';
   anchor.click();
   URL.revokeObjectURL(url);
 });

@@ -1,5 +1,5 @@
 importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
-const CACHE_NAME='name-wod-v14';
+const CACHE_NAME='amped-v17';
 const APP_ASSETS=['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icon-192.png','./icon-512.png','./wod-hero.jpg','./notify-schedule.json','https://cdn.jsdelivr.net/npm/random-words@2.0.1/+esm'];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE_NAME).then(cache=>Promise.all(APP_ASSETS.map(asset=>cache.add(asset).catch(error=>console.warn('Precache failed for',asset,error))))))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE_NAME).map(key=>caches.delete(key)))).then(()=>self.clients.claim()))});
