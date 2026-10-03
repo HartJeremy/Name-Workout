@@ -31,7 +31,7 @@
     <section class="hero-card">
       <div class="hero-art">
         <img src="wod-hero.jpg" alt="">
-        <button id="maxMascot" class="max-hotspot" type="button" aria-label="Max, the AMPED bulb" title="Max"></button>
+        <button id="mascotTrigger" class="mascot-hotspot" type="button" aria-label="AMPED bulb mascot"></button>
       </div>
       <div class="hero-copy">
         <p class="eyebrow">Workout of the day</p>
@@ -186,7 +186,7 @@
     </details>
   </main>
 
-  <div id="maxToast" class="max-toast" role="status" aria-live="polite"></div>
+  <div id="mascotToast" class="mascot-toast" role="status" aria-live="polite"></div>
   <div id="switchFlash" class="switch-flash" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
   <section id="runner" class="runner hidden" aria-label="Active workout">
@@ -196,12 +196,16 @@
       <button id="wakeBtn" class="runner-icon" type="button" aria-label="Keep screen awake">☀</button>
     </div>
     <div class="progress-track"><span id="progressBar"></span></div>
+    <div id="runnerStateSummary" class="runner-state-summary">0 done • 0 skipped • 0 left</div>
+    <div id="runnerStateDots" class="runner-state-dots" aria-label="Workout progress"></div>
     <div id="runnerMain" class="runner-main">
       <div id="runnerLetter" class="runner-letter">J</div>
       <p class="runner-kicker">YOUR NEXT MOVE</p>
       <h2 id="runnerExercise">15 Bicycle Crunches</h2>
       <p id="runnerSplit" class="runner-split"></p>
-      <p class="runner-swipe-hint">Swipe left = next • Swipe right = back</p>
+      <p id="runnerMoveState" class="runner-move-state"></p>
+      <p class="runner-swipe-hint">Swipe left = skip/next • Swipe right = back</p>
+      <div id="runnerSkipNotice" class="runner-skip-notice" role="status" aria-live="polite">SKIPPED — you can come back</div>
       <div id="timerBox" class="timer-box hidden">
         <strong id="timerValue">30</strong><span>SECONDS</span>
         <button id="timerBtn" class="timer-button" type="button">START TIMER</button>
@@ -212,6 +216,15 @@
       <button id="completeMoveBtn" class="runner-complete" type="button"><span>DONE</span><small>Tap and keep moving</small></button>
       <button id="skipMoveBtn" class="runner-secondary" type="button">Skip</button>
     </div>
+  </section>
+
+  <section id="skipReviewScreen" class="skip-review-screen hidden" aria-label="Skipped exercise review">
+    <p class="eyebrow">Before you finish</p>
+    <h2 id="skipReviewTitle">1 MOVE SKIPPED</h2>
+    <p id="skipReviewText">Finish it now, or complete the workout without it.</p>
+    <div id="skipReviewList" class="skip-review-list"></div>
+    <button id="doSkippedBtn" class="primary jumbo skip-review-primary" type="button"><span>DO SKIPPED EXERCISE</span><small>Jump straight back to it</small></button>
+    <button id="finishWithSkipsBtn" class="secondary skip-review-secondary" type="button">FINISH WITHOUT IT</button>
   </section>
 
   <section id="finishScreen" class="finish-screen hidden">

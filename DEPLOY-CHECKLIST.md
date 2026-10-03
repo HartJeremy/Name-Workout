@@ -1,16 +1,12 @@
 # Deployment checklist
 
 1. Extract the ZIP locally so hidden folders are retained.
-2. Upload every file and folder to the repository root.
-3. Confirm `.github/workflows/daily-name-wod.yml` exists in GitHub.
-4. Add `ONESIGNAL_APP_ID` and `ONESIGNAL_REST_API_KEY` as Actions secrets.
-5. Enable GitHub Pages from the default branch and repository root.
-6. Enable GitHub Actions.
-7. Open the deployed app and confirm `/Name-Workout/sw.js` loads as JavaScript.
-8. Install the PWA on the test device.
-9. Turn reminders on, choose a time, and grant permission.
-10. In OneSignal, confirm the subscription and these tags:
-   - `name_wod_notifications` = `1`
-   - `name_wod_time` = selected `HH:MM`
-   - `name_wod_timezone` = `America/New_York`
-11. Run the workflow manually from GitHub Actions to inspect the logs.
+2. Upload every file and folder to the repository root, including `config.js` and `workout-data.js`.
+3. Confirm `.github/workflows/daily-name-wod.yml` exists in GitHub if scheduled-name automation is still in use.
+4. Enable GitHub Pages from the default branch and repository root.
+5. Open the deployed app and confirm `/Name-Workout/sw.js` loads as JavaScript.
+6. Reload once after deployment so the updated service worker (`amped-v27`) can replace the old cache.
+7. Install/update the PWA on a test device and verify D20, Settings, workout start, timer, swipe navigation, and copy-to-text.
+8. Confirm existing customized A-Z and D20 exercise libraries are still present after the update.
+9. Notifications are currently disabled in `config.js`. Only configure OneSignal secrets and notification testing if `APP_CONFIG.notifications.enabled` is intentionally turned on again.
+10. Run `node scripts/validate-package.mjs` before deployment when editing the package locally.

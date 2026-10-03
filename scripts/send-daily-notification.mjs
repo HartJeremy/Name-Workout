@@ -1,8 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { APP_CONFIG } from '../config.js';
 
-const TIMEZONE = 'America/New_York';
-const APP_URL = 'https://hartjeremy.github.io/Name-Workout/';
+const TIMEZONE = APP_CONFIG.timezone;
+const APP_URL = APP_CONFIG.publicUrl;
 const WORKFLOW_FILE = 'daily-name-wod.yml';
 const FALLBACK_LOOKBACK_MINUTES = 15;
 const MAX_LOOKBACK_MINUTES = 24 * 60;

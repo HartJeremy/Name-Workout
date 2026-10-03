@@ -112,4 +112,25 @@ Settings now includes separate **A–Z → Exercise** and **D20 → Exercise** e
 
 ### D20 interaction
 
-The D20 can be tapped, dragged, or flicked. Flick direction and speed influence the visual throw while the secure random roll still determines the result. During an active workout, swipe left to move to the next exercise and swipe right to go back; swiping does not mark exercises complete.
+The D20 can be tapped, dragged, or flicked. Flick direction and speed influence the visual throw while the secure random roll still determines the result. During an active workout, swipe left to skip/advance and swipe right to go back. DONE marks a move completed; an unfinished move advanced with swipe-left or Skip is explicitly marked skipped.
+
+## Workout skip/review flow
+
+- Active workouts track each move as **remaining**, **completed**, or **skipped**.
+- The runner shows live counts plus move-state dots so skipped exercises remain visible.
+- At the end, any skipped moves open a review screen instead of completing silently.
+- **Do skipped exercise(s)** jumps directly into the skipped-only queue.
+- **Finish without it/them** completes the workout with those moves still marked skipped.
+- Completed-workout copy excludes skipped exercises and reports the original completion count (for example, `5 of 6`).
+
+## Code organization
+
+AMPED keeps change-prone configuration separate from behavior:
+
+- `config.js` — app settings, storage keys, mascot identity/messages, intensity labels, and D20 timing.
+- `workout-data.js` — A–Z exercises, D20 exercises, and the 20 Workout-by-Roll templates.
+- `app.js` — UI behavior, workout generation, timers, runner navigation, and persistence.
+- `styles.css` — presentation and responsive layout.
+- `sw.js` — offline caching/service-worker behavior.
+
+To rename the bulb mascot, change only `APP_CONFIG.mascot.name` in `config.js`. The UI accessibility label and Easter-egg messages are generated from that value. Existing local-storage key strings remain intentionally unchanged for backward compatibility with installed users.

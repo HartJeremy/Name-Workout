@@ -1,178 +1,26 @@
-const ENABLE_NOTIFICATIONS = false;
-const STORAGE_KEY = 'nameWorkoutExercises';
-const EXERCISE_LIBRARY_VERSION_KEY = 'nameWorkoutExerciseLibraryVersion';
-const EXERCISE_LIBRARY_VERSION = '3';
-const RECENT_NAMES_KEY = 'nameWorkoutRecentNames';
-const DAILY_NAME_ENABLED_KEY = 'nameWorkoutDailyNameEnabled';
-const DEFAULT_MODE_KEY = 'nameWorkoutDefaultMode';
-const NOTIFICATION_TIME_KEY = 'nameWorkoutNotificationTime';
-const D20_STORAGE_KEY = 'ampedD20Exercises';
-const D20_EXERCISE_LIBRARY_VERSION_KEY = 'ampedD20ExerciseLibraryVersion';
-const D20_EXERCISE_LIBRARY_VERSION = '1';
-const SCHEDULE_URL = 'notify-schedule.json';
-const TIMEZONE = 'America/New_York';
-const APP_PATH = '/Name-Workout/';
-const ONE_SIGNAL_APP_ID = 'f753f501-63a3-42b9-85c9-a8e9a8d5bd30';
-const DICTIONARY_MODULE_URL = 'https://cdn.jsdelivr.net/npm/random-words@2.0.1/+esm';
+import {
+  APP_CONFIG,
+  STORAGE_KEYS,
+  EXERCISE_LIBRARY_VERSION,
+  D20_EXERCISE_LIBRARY_VERSION,
+  MODE_HERO_COPY,
+  FINISH_MESSAGES,
+  INTENSITY_LEVELS,
+  buildMascotMessages
+} from './config.js';
+import {
+  LEGACY_DEFAULT_EXERCISES,
+  DEFAULT_EXERCISES,
+  DEFAULT_D20_EXERCISES,
+  D20_WORKOUTS,
+  d20WorkoutLabel
+} from './workout-data.js';
+
 let dictionaryModulePromise = null;
-
-const MODE_HERO_COPY = {
-  custom:{verb:'Spell it.',description:'Spell a name into today’s workout.'},
-  letters:{verb:'Draw it.',description:'Draw random letters and turn them into today’s workout.'},
-  word:{verb:'Pick it.',description:'Pick a random word and turn it into today’s workout.'},
-  d20:{verb:'Roll it.',description:'Roll the D20 for today’s workout, or switch to Name, Letters, or Word.'}
-};
-
-const FINISH_MESSAGES = [
-  'STRONGER TODAY.',
-  'MOMENTUM BUILT.',
-  'WORK PUT IN.',
-  'KEEP BUILDING.',
-  'SHOWED UP STRONG.',
-  'ONE MORE IN.',
-  'PROGRESS EARNED.',
-  'BUILT FOR MORE.'
-];
-
-// Max is the bulb mascot. He stays intentionally subtle as an Easter egg.
-const MAX_MESSAGES = [
-  'Max is fully charged.',
-  'Max has an idea. It involves reps.',
-  'Max was told this was a light workout.',
-  'Current status: AMPED.',
-  'Max brought the energy. You bring the reps.',
-  'Max says the circuit is live.',
-  'Max says the bulb is on. Your turn.',
-  'Max is operating at maximum wattage.',
-  'Max says this one has potential.',
-  'Max says today\'s forecast: 100% chance of reps.',
-  'Max is glowing with questionable confidence.',
-  'Max says that\'s enough thinking.',
-  'Max says resistance is part of the circuit.',
-  'Max is suspiciously excited about burpees.',
-  'Max says this looked easier on paper.',
-  'Max says don\'t blame the dice.',
-  'Max claims the D20 made him do it.',
-  'Max says it\'s only a few reps. He may be lying.',
-  'Max has zero muscles and many opinions.',
-  'Max says sweat is just the cooling system.',
-  'Max says no warranty coverage for skipped reps.',
-  'Max says one more won\'t trip the breaker.',
-  'Max is monitoring your voltage.',
-  'Max says consider this a power cycle.',
-  'Max says your rest period is under review.',
-  'Max says you\'re cleared for full power.',
-  'Max says the switch only works if you flip it.',
-  'Max says the current plan is: keep moving.',
-  'Max says every rep adds a little charge.',
-  'Max says low battery still counts as battery.',
-  'Max says the meter is moving in the right direction.',
-  'Max says you\'ve got enough juice for one more.',
-  'Max says this is how you build a stronger circuit.',
-  'Max says the light stays on until the workout is done.',
-  'Max says power up. No dramatic montage required.',
-  'Max says progress is currently flowing.',
-  'Max says your output is looking suspiciously good.',
-  'Max says this workout is now officially energized.',
-  'Max says the breaker is holding. Keep going.',
-  'Max says you\'re more charged than you think.'
-];
-let maxToastTimer = null;
-let lastMaxMessageIndex = -1;
+const MASCOT_MESSAGES = buildMascotMessages();
+let mascotToastTimer = null;
+let lastMascotMessageIndex = -1;
 let switchFlashTimer = null;
-
-const INTENSITY_LEVELS = [
-  {value:0.5,label:'✨ Spark',color:'#45c4e8'},
-  {value:0.75,label:'🔋 Energized',color:'#55d187'},
-  {value:1,label:'💡 Powered',color:'#e6c94f'},
-  {value:1.25,label:'🎚️ Amped',color:'#f29a3f'},
-  {value:1.5,label:'⚡ Surging',color:'#ef624f'},
-  {value:2,label:'💥 Overload',color:'#d44fe8'}
-];
-
-// Used only to migrate untouched installs away from the original leg-heavy map.
-const LEGACY_DEFAULT_EXERCISES = {
-  A:{amount:5,unit:'reps',name:'Burpees'},B:{amount:10,unit:'reps',name:'Crunches'},C:{amount:10,unit:'reps',name:'Squats'},D:{amount:30,unit:'sec',name:'Bridge'},E:{amount:10,unit:'reps',name:'Squats'},F:{amount:30,unit:'sec',name:'Plank'},G:{amount:10,unit:'reps',name:'Lunges',each:'split',eachLabel:'leg'},H:{amount:10,unit:'reps',name:'Leg Raises'},I:{amount:10,unit:'reps',name:'Side Lunges',each:'split',eachLabel:'side'},J:{amount:15,unit:'reps',name:'Bicycle Crunches'},K:{amount:10,unit:'reps',name:'Reverse Lunges',each:'split',eachLabel:'leg'},L:{amount:10,unit:'reps',name:'Toe Touches'},M:{amount:10,unit:'reps',name:'Single-Leg Squats',each:'split',eachLabel:'leg'},N:{amount:10,unit:'reps',name:'Bent-Leg Jackknives'},O:{amount:20,unit:'reps',name:'Jumping Jacks'},P:{amount:20,unit:'reps',name:'Cross-Country Skiers'},Q:{amount:20,unit:'reps',name:'Scissor Kicks'},R:{amount:20,unit:'reps',name:'Mountain Climbers'},S:{amount:20,unit:'reps',name:'High Knees'},T:{amount:20,unit:'reps',name:'Mountain Climbers'},U:{amount:15,unit:'reps',name:'Clamshells',each:'perSide',eachLabel:'side'},V:{amount:15,unit:'reps',name:'Side Leg Lifts',each:'perSide',eachLabel:'side'},W:{amount:15,unit:'reps',name:'Glute Leg Lifts'},X:{amount:15,unit:'reps',name:'Superman Lifts'},Y:{amount:15,unit:'reps',name:'Supermans'},Z:{amount:15,unit:'reps',name:'Donkey Kicks',each:'perSide',eachLabel:'leg'}
-};
-
-// Balanced A-Z bodyweight library: upper body, lower body, core, cardio and posterior chain.
-const DEFAULT_EXERCISES = {
-  A:{amount:8,unit:'reps',name:'Push-Ups'},
-  B:{amount:12,unit:'reps',name:'Air Squats'},
-  C:{amount:16,unit:'reps',name:'Bicycle Crunches'},
-  D:{amount:15,unit:'reps',name:'Glute Bridges'},
-  E:{amount:16,unit:'reps',name:'Shoulder Taps',each:'split',eachLabel:'shoulder'},
-  F:{amount:30,unit:'sec',name:'Forearm Plank'},
-  G:{amount:10,unit:'reps',name:'Reverse Lunges',each:'split',eachLabel:'leg'},
-  H:{amount:12,unit:'reps',name:'Superman Lifts'},
-  I:{amount:20,unit:'reps',name:'Jumping Jacks'},
-  J:{amount:8,unit:'reps',name:'Pike Push-Ups'},
-  K:{amount:16,unit:'reps',name:'Dead Bugs',each:'split',eachLabel:'side'},
-  L:{amount:30,unit:'sec',name:'High Knees'},
-  M:{amount:20,unit:'reps',name:'Mountain Climbers'},
-  N:{amount:10,unit:'reps',name:'Plank Up-Downs'},
-  O:{amount:10,unit:'reps',name:'Side Lunges',each:'split',eachLabel:'side'},
-  P:{amount:8,unit:'reps',name:'Hand-Release Push-Ups'},
-  Q:{amount:30,unit:'sec',name:'Wall Sit'},
-  R:{amount:16,unit:'reps',name:'Skater Hops',each:'split',eachLabel:'side'},
-  S:{amount:15,unit:'reps',name:'Good Mornings'},
-  T:{amount:6,unit:'reps',name:'Burpees'},
-  U:{amount:40,unit:'sec',name:'Side Plank',each:'split',eachLabel:'side'},
-  V:{amount:12,unit:'reps',name:'Reverse Snow Angels'},
-  W:{amount:25,unit:'sec',name:'Hollow Hold'},
-  X:{amount:12,unit:'reps',name:'Bird Dogs',each:'split',eachLabel:'side'},
-  Y:{amount:30,unit:'sec',name:'Bear Crawl'},
-  Z:{amount:30,unit:'sec',name:'Fast Feet'}
-};
-
-const DEFAULT_D20_EXERCISES = [
-  {amount:10,unit:'reps',name:'Push-Ups'},
-  {amount:15,unit:'reps',name:'Air Squats'},
-  {amount:20,unit:'reps',name:'Bicycle Crunches'},
-  {amount:12,unit:'reps',name:'Reverse Lunges',each:'split',eachLabel:'leg'},
-  {amount:20,unit:'reps',name:'Mountain Climbers'},
-  {amount:15,unit:'reps',name:'Glute Bridges'},
-  {amount:20,unit:'reps',name:'Shoulder Taps',each:'split',eachLabel:'shoulder'},
-  {amount:25,unit:'reps',name:'Jumping Jacks'},
-  {amount:16,unit:'reps',name:'Dead Bugs',each:'split',eachLabel:'side'},
-  {amount:8,unit:'reps',name:'Pike Push-Ups'},
-  {amount:30,unit:'sec',name:'High Knees'},
-  {amount:12,unit:'reps',name:'Superman Lifts'},
-  {amount:40,unit:'sec',name:'Side Plank',each:'split',eachLabel:'side'},
-  {amount:12,unit:'reps',name:'Reverse Snow Angels'},
-  {amount:30,unit:'sec',name:'Bear Crawl'},
-  {amount:30,unit:'sec',name:'Forearm Plank'},
-  {amount:20,unit:'reps',name:'Skater Hops',each:'split',eachLabel:'side'},
-  {amount:10,unit:'reps',name:'Plank Up-Downs'},
-  {amount:8,unit:'reps',name:'Burpees'},
-  {amount:15,unit:'reps',name:'Good Mornings'}
-];
-
-// Fun title + plain-language grouping. Workout-by-Roll templates are intentionally
-// biased toward their grouping without stacking the same movement pattern all day.
-const D20_WORKOUTS = [
-  {name:'Full Charge',group:'Balanced Six',rolls:[1,2,3,6,8,16]},
-  {name:'Push the Pace',group:'Push + Pace',rolls:[1,4,7,11,12,16]},
-  {name:'Core Current',group:'Core Engine',rolls:[3,9,13,14,8,2]},
-  {name:'Leg Day Lightning',group:'Legs + Lungs',rolls:[2,4,17,11,1,3]},
-  {name:'Upper Voltage',group:'Upper Body Burn',rolls:[1,10,14,12,3,2]},
-  {name:'Backline Power',group:'Posterior Power',rolls:[6,12,20,2,5,16]},
-  {name:'Redline',group:'Cardio Circuit',rolls:[8,11,19,1,9,14]},
-  {name:'Steady Signal',group:'Stability Day',rolls:[9,13,6,20,14,2]},
-  {name:'Power Surge',group:'Full-Body Charge',rolls:[19,2,1,3,12,11]},
-  {name:'Grounded',group:'Steady Strength',rolls:[1,2,6,9,14,20]},
-  {name:'Shoulder Spark',group:'Shoulders + Core',rolls:[10,7,9,13,2,14]},
-  {name:'Side Quest',group:'Athletic Mix',rolls:[17,4,1,15,3,20]},
-  {name:'Quick Charge',group:'Quick Sweat',rolls:[8,19,3,1,6,16]},
-  {name:'Foundation',group:'Strength Base',rolls:[1,2,4,6,10,12]},
-  {name:'Core Voltage',group:'Core Control',rolls:[3,9,13,20,1,14]},
-  {name:'Brace for It',group:'Move + Brace',rolls:[15,4,9,6,1,14]},
-  {name:'Upper Circuit',group:'Upper + Posterior',rolls:[1,10,12,20,7,2]},
-  {name:'Lower Circuit',group:'Lower + Core',rolls:[2,4,17,6,9,13]},
-  {name:'Overdrive',group:'Conditioning Mix',rolls:[19,11,8,2,12,9]},
-  {name:'Everything On',group:'Everything Day',rolls:[1,4,7,9,12,19]}
-];
-function d20WorkoutLabel(template){return `${template.name} (${template.group})`}
 
 const $ = id => document.getElementById(id);
 let mode = 'd20';
@@ -194,9 +42,12 @@ let oneSignalInstance = null;
 let todayScheduleEntry = null;
 let scheduleData = [];
 let scheduleLoaded = false;
-let dailyNameEnabled = localStorage.getItem(DAILY_NAME_ENABLED_KEY) !== 'false';
+let dailyNameEnabled = localStorage.getItem(STORAGE_KEYS.dailyNameEnabled) !== 'false';
 let currentMove = 0;
-let completedMoves = new Set();
+const MOVE_STATE = Object.freeze({REMAINING:'remaining',COMPLETED:'completed',SKIPPED:'skipped'});
+let moveStates = [];
+let skipReviewMode = false;
+let skipNoticeTimer = null;
 let timerInterval = null;
 let timerRemaining = 0;
 let timerSwitchTriggered = false;
@@ -206,7 +57,7 @@ const previewTimers = new Map();
 function dateISOForOffset(days = 0) {
   const now = new Date();
   now.setDate(now.getDate() + days);
-  return new Intl.DateTimeFormat('en-CA', {timeZone:TIMEZONE,year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+  return new Intl.DateTimeFormat('en-CA', {timeZone:APP_CONFIG.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
 }
 function todayISO(){return dateISOForOffset(0)}
 
@@ -217,12 +68,12 @@ function sameExercise(a,b){
 
 function loadExercises(){
   let saved = null;
-  try{saved = JSON.parse(localStorage.getItem(STORAGE_KEY));}catch(error){console.warn('Could not load saved exercises.',error)}
+  try{saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.exercises));}catch(error){console.warn('Could not load saved exercises.',error)}
   if(!saved || typeof saved !== 'object'){
-    localStorage.setItem(EXERCISE_LIBRARY_VERSION_KEY,EXERCISE_LIBRARY_VERSION);
+    localStorage.setItem(STORAGE_KEYS.exerciseLibraryVersion,EXERCISE_LIBRARY_VERSION);
     return structuredClone(DEFAULT_EXERCISES);
   }
-  const currentVersion = localStorage.getItem(EXERCISE_LIBRARY_VERSION_KEY);
+  const currentVersion = localStorage.getItem(STORAGE_KEYS.exerciseLibraryVersion);
   const migrated = Object.fromEntries(Object.keys(DEFAULT_EXERCISES).map(letter => {
     const savedEntry = saved[letter];
     if(currentVersion !== EXERCISE_LIBRARY_VERSION && sameExercise(savedEntry,LEGACY_DEFAULT_EXERCISES[letter])){
@@ -235,29 +86,29 @@ function loadExercises(){
     }
     return [letter,{...DEFAULT_EXERCISES[letter],...(savedEntry || {})}];
   }));
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(migrated));
-  localStorage.setItem(EXERCISE_LIBRARY_VERSION_KEY,EXERCISE_LIBRARY_VERSION);
+  localStorage.setItem(STORAGE_KEYS.exercises,JSON.stringify(migrated));
+  localStorage.setItem(STORAGE_KEYS.exerciseLibraryVersion,EXERCISE_LIBRARY_VERSION);
   return migrated;
 }
 function saveExercises(){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(exercises));
-  localStorage.setItem(EXERCISE_LIBRARY_VERSION_KEY,EXERCISE_LIBRARY_VERSION);
+  localStorage.setItem(STORAGE_KEYS.exercises,JSON.stringify(exercises));
+  localStorage.setItem(STORAGE_KEYS.exerciseLibraryVersion,EXERCISE_LIBRARY_VERSION);
 }
 function loadD20Exercises(){
   let saved = null;
-  try{saved = JSON.parse(localStorage.getItem(D20_STORAGE_KEY));}catch(error){console.warn('Could not load saved D20 exercises.',error)}
+  try{saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.d20Exercises));}catch(error){console.warn('Could not load saved D20 exercises.',error)}
   if(!Array.isArray(saved)){
-    localStorage.setItem(D20_EXERCISE_LIBRARY_VERSION_KEY,D20_EXERCISE_LIBRARY_VERSION);
+    localStorage.setItem(STORAGE_KEYS.d20ExerciseLibraryVersion,D20_EXERCISE_LIBRARY_VERSION);
     return structuredClone(DEFAULT_D20_EXERCISES);
   }
   const merged = DEFAULT_D20_EXERCISES.map((entry,index) => ({...entry,...(saved[index] || {})}));
-  localStorage.setItem(D20_STORAGE_KEY,JSON.stringify(merged));
-  localStorage.setItem(D20_EXERCISE_LIBRARY_VERSION_KEY,D20_EXERCISE_LIBRARY_VERSION);
+  localStorage.setItem(STORAGE_KEYS.d20Exercises,JSON.stringify(merged));
+  localStorage.setItem(STORAGE_KEYS.d20ExerciseLibraryVersion,D20_EXERCISE_LIBRARY_VERSION);
   return merged;
 }
 function saveD20Exercises(){
-  localStorage.setItem(D20_STORAGE_KEY,JSON.stringify(d20Exercises));
-  localStorage.setItem(D20_EXERCISE_LIBRARY_VERSION_KEY,D20_EXERCISE_LIBRARY_VERSION);
+  localStorage.setItem(STORAGE_KEYS.d20Exercises,JSON.stringify(d20Exercises));
+  localStorage.setItem(STORAGE_KEYS.d20ExerciseLibraryVersion,D20_EXERCISE_LIBRARY_VERSION);
 }
 
 function renderTomorrowName(){
@@ -296,7 +147,7 @@ function updateNameModeAvailability(){
   const nameDefaultOption = $('defaultModeSelect')?.querySelector('option[value="custom"]');
   if(nameDefaultOption) nameDefaultOption.hidden = !hasRemainingNames;
   if(!hasRemainingNames && getDefaultMode() === 'custom'){
-    localStorage.setItem(DEFAULT_MODE_KEY,'d20');
+    localStorage.setItem(STORAGE_KEYS.defaultMode,'d20');
     if($('defaultModeSelect')) $('defaultModeSelect').value = 'd20';
   }
   if(!hasRemainingNames && mode === 'custom') setMode('d20');
@@ -304,7 +155,7 @@ function updateNameModeAvailability(){
 
 async function loadTodaySchedule(){
   try{
-    const response = await fetch(SCHEDULE_URL,{cache:'no-store'});
+    const response = await fetch(APP_CONFIG.scheduleUrl,{cache:'no-store'});
     if(!response.ok) throw new Error(`Schedule returned ${response.status}`);
     scheduleData = await response.json();
     scheduleLoaded = true;
@@ -328,9 +179,9 @@ function normalizeFirstName(value){
 }
 function loadRecentNames(){
   try{
-    const saved = JSON.parse(localStorage.getItem(RECENT_NAMES_KEY)) || [];
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.recentNames)) || [];
     const cleaned = [...new Set(saved.map(normalizeFirstName).filter(Boolean))].slice(0,6);
-    if(JSON.stringify(saved) !== JSON.stringify(cleaned)) localStorage.setItem(RECENT_NAMES_KEY,JSON.stringify(cleaned));
+    if(JSON.stringify(saved) !== JSON.stringify(cleaned)) localStorage.setItem(STORAGE_KEYS.recentNames,JSON.stringify(cleaned));
     return cleaned;
   }catch{return []}
 }
@@ -339,7 +190,7 @@ function rememberName(name){
   const firstName = normalizeFirstName(name);
   if(!firstName) return;
   const names = [firstName,...loadRecentNames().filter(item => item.toLowerCase() !== firstName.toLowerCase())].slice(0,6);
-  localStorage.setItem(RECENT_NAMES_KEY,JSON.stringify(names));
+  localStorage.setItem(STORAGE_KEYS.recentNames,JSON.stringify(names));
   renderRecentNames();
 }
 function renderRecentNames(){
@@ -354,13 +205,21 @@ function escapeHtml(value){
   return String(value).replace(/[&<>'"]/g,char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 }
 
+function initializeBranding(){
+  const trigger = $('mascotTrigger');
+  if(!trigger) return;
+  const label = `${APP_CONFIG.mascot.name}, the ${APP_CONFIG.name} ${APP_CONFIG.mascot.type}`;
+  trigger.setAttribute('aria-label',label);
+  trigger.title = APP_CONFIG.mascot.name;
+}
+
 function getDefaultMode(){
-  const saved = localStorage.getItem(DEFAULT_MODE_KEY);
+  const saved = localStorage.getItem(STORAGE_KEYS.defaultMode);
   return ['custom','letters','word','d20'].includes(saved) ? saved : 'd20';
 }
 function saveDefaultMode(value){
   const next = ['custom','letters','word','d20'].includes(value) ? value : 'd20';
-  localStorage.setItem(DEFAULT_MODE_KEY,next);
+  localStorage.setItem(STORAGE_KEYS.defaultMode,next);
   return next;
 }
 
@@ -432,7 +291,7 @@ function randomLetters(count,allowDuplicates){
   return result.join('');
 }
 function loadDictionaryModule(){
-  if(!dictionaryModulePromise) dictionaryModulePromise = import(DICTIONARY_MODULE_URL).catch(error => {
+  if(!dictionaryModulePromise) dictionaryModulePromise = import(APP_CONFIG.dictionaryModuleUrl).catch(error => {
     console.warn('Dictionary module failed to load.',error);
     dictionaryModulePromise = null;
     return null;
@@ -555,19 +414,19 @@ async function buildWorkoutFromInput(){
   showPreview();
 }
 
-function showMaxMessage(){
-  const toast = $('maxToast');
+function showMascotMessage(){
+  const toast = $('mascotToast');
   if(!toast) return;
-  let messageIndex = secureRandomInt(MAX_MESSAGES.length);
-  if(MAX_MESSAGES.length > 1 && messageIndex === lastMaxMessageIndex){
-    messageIndex = (messageIndex + 1 + secureRandomInt(MAX_MESSAGES.length - 1)) % MAX_MESSAGES.length;
+  let messageIndex = secureRandomInt(MASCOT_MESSAGES.length);
+  if(MASCOT_MESSAGES.length > 1 && messageIndex === lastMascotMessageIndex){
+    messageIndex = (messageIndex + 1 + secureRandomInt(MASCOT_MESSAGES.length - 1)) % MASCOT_MESSAGES.length;
   }
-  lastMaxMessageIndex = messageIndex;
-  const message = MAX_MESSAGES[messageIndex];
+  lastMascotMessageIndex = messageIndex;
+  const message = MASCOT_MESSAGES[messageIndex];
   toast.textContent = message;
   toast.classList.add('show');
-  if(maxToastTimer) clearTimeout(maxToastTimer);
-  maxToastTimer = setTimeout(()=>toast.classList.remove('show'),2600);
+  if(mascotToastTimer) clearTimeout(mascotToastTimer);
+  mascotToastTimer = setTimeout(()=>toast.classList.remove('show'),APP_CONFIG.mascot.toastDurationMs);
   vibrate(20);
 }
 
@@ -755,7 +614,7 @@ async function rollExerciseWorkout(forceAuto=false){
       d20ManualRolls.push(roll);
       renderD20History(d20ManualRolls);
       $('d20Status').textContent = `Roll ${index+1} of ${count}: ${roll} — ${d20Exercises[roll-1].name}`;
-      if(index < count-1) await wait(950);
+      if(index < count-1) await wait(APP_CONFIG.d20.autoRollPauseMs);
     }
     finalizeD20ExerciseWorkout(d20ManualRolls);
     return;
@@ -763,7 +622,7 @@ async function rollExerciseWorkout(forceAuto=false){
 
   if(d20ManualRolls.length >= count) resetD20Rolls();
   const roll = rollD20();
-  await animateD20(roll,900);
+  await animateD20(roll,APP_CONFIG.d20.manualRollDurationMs);
   d20ManualRolls.push(roll);
   renderD20History(d20ManualRolls);
   $('d20Status').textContent = `Roll ${d20ManualRolls.length} of ${count}: ${roll} — ${d20Exercises[roll-1].name}`;
@@ -784,7 +643,7 @@ function finalizeD20ExerciseWorkout(rolls){
 async function rollFullWorkout(){
   const roll = rollD20();
   $('d20Status').textContent = 'Rolling for 1 of 20 complete workouts…';
-  await animateD20(roll,1000);
+  await animateD20(roll,APP_CONFIG.d20.workoutRollDurationMs);
   lastD20WorkoutRoll = roll;
   lastD20Rolls = [roll];
   lastWorkout = buildD20TemplateWorkout(roll);
@@ -879,11 +738,20 @@ function renderPreview(){
 }
 
 function workoutText({completed=false} = {}){
-  const lead = completed ? `✅ ${workoutDisplayName} complete` : `Today's workout: ${workoutDisplayName}`;
+  const completedCount = moveStates.filter(state => state === MOVE_STATE.COMPLETED).length;
+  const skippedCount = moveStates.filter(state => state === MOVE_STATE.SKIPPED).length;
+  const lead = completed
+    ? skippedCount > 0
+      ? `✅ ${workoutDisplayName} complete — ${completedCount} of ${lastWorkout.length}`
+      : `✅ ${workoutDisplayName} complete`
+    : `Today's workout: ${workoutDisplayName}`;
   const lines = [lead];
   if(lastBuildKind === 'd20-exercise' && lastD20Rolls.length) lines.push(`🎲 D20 rolls: ${lastD20Rolls.join(', ')}`);
   if(lastBuildKind === 'd20-workout' && lastD20WorkoutRoll) lines.push(`🎲 D20 roll: ${lastD20WorkoutRoll}`);
-  lines.push('',...lastWorkout.map((item,index) => `${index+1}. ${item.headline}${item.detail?` (${item.detail})`:''}`));
+  const workoutItems = completed
+    ? lastWorkout.filter((_,index) => moveStates[index] === MOVE_STATE.COMPLETED)
+    : lastWorkout;
+  lines.push('',...workoutItems.map((item,index) => `${index+1}. ${item.headline}${item.detail?` (${item.detail})`:''}`));
   return lines.join('\n');
 }
 async function writeClipboard(text){
@@ -921,10 +789,18 @@ async function requestWakeLock(){
   }catch(error){console.warn('Wake lock unavailable.',error)}
 }
 async function releaseWakeLock(){try{await wakeLock?.release()}catch{}wakeLock=null}
+function workoutStateCounts(){
+  const completed = moveStates.filter(state => state === MOVE_STATE.COMPLETED).length;
+  const skipped = moveStates.filter(state => state === MOVE_STATE.SKIPPED).length;
+  const remaining = moveStates.filter(state => state === MOVE_STATE.REMAINING).length;
+  return {completed,skipped,remaining,total:lastWorkout.length};
+}
 function startWorkout(){
   if(!lastWorkout.length) return;
   currentMove = 0;
-  completedMoves = new Set();
+  moveStates = Array(lastWorkout.length).fill(MOVE_STATE.REMAINING);
+  skipReviewMode = false;
+  $('skipReviewScreen')?.classList.add('hidden');
   $('runner').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
   requestWakeLock();
@@ -933,14 +809,29 @@ function startWorkout(){
 function renderRunner(){
   clearTimer();
   const item = lastWorkout[currentMove];
+  const counts = workoutStateCounts();
+  const currentState = moveStates[currentMove] || MOVE_STATE.REMAINING;
   $('runnerName').textContent = workoutDisplayName || 'TODAY’S WOD';
   $('runnerProgressText').textContent = `${currentMove+1} OF ${lastWorkout.length}`;
-  $('progressBar').style.width = `${(completedMoves.size/lastWorkout.length)*100}%`;
+  $('runnerStateSummary').textContent = `${counts.completed} done • ${counts.skipped} skipped • ${counts.remaining} left`;
+  $('progressBar').style.width = `${lastWorkout.length ? (counts.completed/lastWorkout.length)*100 : 0}%`;
+  $('runnerStateDots').innerHTML = moveStates.map((state,index) => {
+    const current = index === currentMove ? ' current' : '';
+    const symbol = state === MOVE_STATE.COMPLETED ? '✓' : state === MOVE_STATE.SKIPPED ? '–' : '';
+    const label = `Move ${index+1}: ${state}${index===currentMove?', current':''}`;
+    return `<span class="runner-state-dot ${state}${current}" aria-label="${escapeHtml(label)}">${symbol}</span>`;
+  }).join('');
   $('runnerLetter').textContent = item.letter;
   $('runnerExercise').textContent = item.headline;
   $('runnerSplit').textContent = item.detail;
+  $('runnerMoveState').textContent = currentState === MOVE_STATE.SKIPPED ? 'SKIPPED — finish it now or leave it skipped' : currentState === MOVE_STATE.COMPLETED ? 'COMPLETED' : '';
+  $('runnerMoveState').className = `runner-move-state ${currentState}`;
   $('prevMoveBtn').disabled = currentMove === 0;
-  $('completeMoveBtn').querySelector('span').textContent = completedMoves.has(currentMove) ? 'COMPLETED' : 'DONE';
+  const completeButton = $('completeMoveBtn');
+  completeButton.querySelector('span').textContent = currentState === MOVE_STATE.COMPLETED ? 'COMPLETED' : currentState === MOVE_STATE.SKIPPED ? 'DONE NOW' : 'DONE';
+  completeButton.querySelector('small').textContent = currentState === MOVE_STATE.SKIPPED ? 'Clear this skip' : 'Tap and keep moving';
+  $('skipMoveBtn').textContent = currentState === MOVE_STATE.SKIPPED ? 'Skipped' : 'Skip';
+  $('skipMoveBtn').disabled = currentState === MOVE_STATE.COMPLETED;
   if(item.unit === 'sec'){
     $('timerBox').classList.remove('hidden');
     timerRemaining = item.amount;
@@ -948,11 +839,39 @@ function renderRunner(){
     updateTimerDisplay();
   }else $('timerBox').classList.add('hidden');
 }
+function showSkipNotice(){
+  const notice = $('runnerSkipNotice');
+  if(!notice) return;
+  clearTimeout(skipNoticeTimer);
+  notice.textContent = 'SKIPPED — you can come back';
+  notice.classList.add('show');
+  skipNoticeTimer = setTimeout(()=>notice.classList.remove('show'),1100);
+}
+function markMoveSkipped(index,{notify=true}={}){
+  if(moveStates[index] === MOVE_STATE.REMAINING){
+    moveStates[index] = MOVE_STATE.SKIPPED;
+    if(notify){showSkipNotice();vibrate(18)}
+  }
+}
 let runnerSwipeAnimating=false;
 function runnerTarget(delta){const next=currentMove+delta;return next>=0&&next<lastWorkout.length?next:null}
-async function navigateRunner(delta,{animate=true,fromDrag=0}={}){
-  if(runnerSwipeAnimating)return;const next=runnerTarget(delta);const main=$('runnerMain');
-  if(next===null){if(main){main.style.transform='';main.style.opacity=''}vibrate(14);return}
+async function navigateRunner(delta,{animate=true,fromDrag=0,markSkip=false}={}){
+  if(runnerSwipeAnimating)return;
+  if(markSkip && delta>0) markMoveSkipped(currentMove);
+  const main=$('runnerMain');
+  let next;
+  if(skipReviewMode){
+    const skippedIndexes=moveStates.map((state,index)=>state===MOVE_STATE.SKIPPED?index:-1).filter(index=>index>=0);
+    next=delta>0
+      ? skippedIndexes.find(index=>index>currentMove) ?? null
+      : [...skippedIndexes].reverse().find(index=>index<currentMove) ?? null;
+  }else next=runnerTarget(delta);
+  if(next===null){
+    if(main){main.style.transform='';main.style.opacity=''}
+    if(delta>0) resolveWorkoutEnd();
+    else vibrate(14);
+    return;
+  }
   clearTimer();runnerSwipeAnimating=true;
   if(animate&&main?.animate){
     const width=Math.max(main.clientWidth,320),out=delta>0?-width*.48:width*.48;
@@ -965,8 +884,8 @@ async function navigateRunner(delta,{animate=true,fromDrag=0}={}){
 function setupRunnerSwipe(){
   const main=$('runnerMain');if(!main)return;let active=false,sx=0,sy=0,dx=0,dy=0;
   main.addEventListener('pointerdown',event=>{if(event.target.closest('button')||runnerSwipeAnimating)return;active=true;sx=event.clientX;sy=event.clientY;dx=dy=0;try{main.setPointerCapture(event.pointerId)}catch{}});
-  main.addEventListener('pointermove',event=>{if(!active)return;dx=event.clientX-sx;dy=event.clientY-sy;if(Math.abs(dx)>Math.abs(dy)*1.05){const atEdge=(dx>0&&currentMove===0)||(dx<0&&currentMove===lastWorkout.length-1);const resistance=atEdge ? .38 : 1;main.style.transform=`translateX(${dx*resistance}px)`;main.style.opacity=String(Math.max(.55,1-Math.abs(dx)/(main.clientWidth*1.5)));event.preventDefault()}});
-  const end=()=>{if(!active)return;active=false;const threshold=Math.min(90,Math.max(55,main.clientWidth*.18));if(Math.abs(dx)>=threshold&&Math.abs(dx)>Math.abs(dy)*1.15){navigateRunner(dx<0?1:-1,{animate:true,fromDrag:dx})}else if(main.animate){main.animate([{transform:`translateX(${dx}px)`,opacity:main.style.opacity||1},{transform:'translateX(0)',opacity:1}],{duration:150,easing:'ease-out'}).finished.finally(()=>{main.style.transform='';main.style.opacity=''})}else{main.style.transform='';main.style.opacity=''}};
+  main.addEventListener('pointermove',event=>{if(!active)return;dx=event.clientX-sx;dy=event.clientY-sy;if(Math.abs(dx)>Math.abs(dy)*1.05){const atEdge=(dx>0&&currentMove===0);const resistance=atEdge ? .38 : 1;main.style.transform=`translateX(${dx*resistance}px)`;main.style.opacity=String(Math.max(.55,1-Math.abs(dx)/(main.clientWidth*1.5)));event.preventDefault()}});
+  const end=()=>{if(!active)return;active=false;const threshold=Math.min(90,Math.max(55,main.clientWidth*.18));if(Math.abs(dx)>=threshold&&Math.abs(dx)>Math.abs(dy)*1.15){navigateRunner(dx<0?1:-1,{animate:true,fromDrag:dx,markSkip:dx<0})}else if(main.animate){main.animate([{transform:`translateX(${dx}px)`,opacity:main.style.opacity||1},{transform:'translateX(0)',opacity:1}],{duration:150,easing:'ease-out'}).finished.finally(()=>{main.style.transform='';main.style.opacity=''})}else{main.style.transform='';main.style.opacity=''}};
   main.addEventListener('pointerup',end);main.addEventListener('pointercancel',()=>{active=false;main.style.transform='';main.style.opacity=''});
 }
 
@@ -998,27 +917,87 @@ function toggleTimer(){
   updateTimerDisplay();
 }
 function vibrate(pattern=30){if($('vibrationToggle')?.checked && navigator.vibrate) navigator.vibrate(pattern)}
+function nextMoveWithState(state,{after=currentMove}={}){
+  for(let index=after+1;index<moveStates.length;index++) if(moveStates[index]===state) return index;
+  return moveStates.findIndex(value=>value===state);
+}
 function completeCurrentMove(){
-  completedMoves.add(currentMove);
+  moveStates[currentMove] = MOVE_STATE.COMPLETED;
   vibrate(40);
-  if(completedMoves.size >= lastWorkout.length){finishWorkout();return}
-  let next = currentMove+1;
-  while(next < lastWorkout.length && completedMoves.has(next)) next += 1;
-  if(next >= lastWorkout.length) next = [...Array(lastWorkout.length).keys()].find(index => !completedMoves.has(index)) ?? currentMove;
-  currentMove = next;
+  const counts = workoutStateCounts();
+  if(skipReviewMode){
+    const nextSkipped = nextMoveWithState(MOVE_STATE.SKIPPED);
+    if(nextSkipped !== -1){currentMove=nextSkipped;renderRunner();return}
+    skipReviewMode=false;
+    finishWorkout();
+    return;
+  }
+  if(counts.remaining === 0){resolveWorkoutEnd();return}
+  const nextRemaining = nextMoveWithState(MOVE_STATE.REMAINING);
+  if(nextRemaining !== -1){currentMove=nextRemaining;renderRunner();return}
+  resolveWorkoutEnd();
+}
+function skipCurrentMove(){
+  if(moveStates[currentMove] === MOVE_STATE.COMPLETED) return;
+  markMoveSkipped(currentMove);
+  if(skipReviewMode){
+    const nextSkipped = nextMoveWithState(MOVE_STATE.SKIPPED);
+    if(nextSkipped !== -1 && nextSkipped !== currentMove){currentMove=nextSkipped;renderRunner();return}
+    showSkipReview();
+    return;
+  }
+  const next=runnerTarget(1);
+  if(next===null){resolveWorkoutEnd();return}
+  currentMove=next;renderRunner();
+}
+function resolveWorkoutEnd(){
+  const counts=workoutStateCounts();
+  if(counts.remaining>0){
+    const nextRemaining=moveStates.findIndex(state=>state===MOVE_STATE.REMAINING);
+    if(nextRemaining!==-1){currentMove=nextRemaining;renderRunner();return}
+  }
+  if(counts.skipped>0){showSkipReview();return}
+  finishWorkout();
+}
+function showSkipReview(){
+  clearTimer();
+  skipReviewMode=false;
+  $('runner').classList.add('hidden');
+  const skippedIndexes=moveStates.map((state,index)=>state===MOVE_STATE.SKIPPED?index:-1).filter(index=>index>=0);
+  const count=skippedIndexes.length;
+  $('skipReviewTitle').textContent=`${count} ${count===1?'MOVE':'MOVES'} SKIPPED`;
+  $('skipReviewText').textContent=count===1?'Finish it now, or complete the workout without it.':'Finish them now, or complete the workout without them.';
+  $('skipReviewList').innerHTML=skippedIndexes.map(index=>`<div class="skip-review-item"><span>${index+1}</span><b>${escapeHtml(lastWorkout[index].headline)}</b></div>`).join('');
+  $('doSkippedBtn').querySelector('span').textContent=count===1?'DO SKIPPED EXERCISE':'DO SKIPPED EXERCISES';
+  $('finishWithSkipsBtn').textContent=count===1?'FINISH WITHOUT IT':'FINISH WITHOUT THEM';
+  $('skipReviewScreen').classList.remove('hidden');
+  vibrate([60,70,60]);
+}
+function resumeSkippedExercises(){
+  const firstSkipped=moveStates.findIndex(state=>state===MOVE_STATE.SKIPPED);
+  if(firstSkipped===-1){finishWorkout();return}
+  $('skipReviewScreen').classList.add('hidden');
+  $('runner').classList.remove('hidden');
+  skipReviewMode=true;
+  currentMove=firstSkipped;
   renderRunner();
 }
 function finishWorkout(){
   clearTimer();
   releaseWakeLock();
   $('runner').classList.add('hidden');
+  $('skipReviewScreen')?.classList.add('hidden');
+  skipReviewMode=false;
+  const counts=workoutStateCounts();
   const message = FINISH_MESSAGES[secureRandomInt(FINISH_MESSAGES.length)];
   $('finishTitle').innerHTML = `${escapeHtml(workoutDisplayName)}<br>${escapeHtml(message)}`;
-  $('finishStats').textContent = `${lastWorkout.length} moves finished. Keep the momentum going.`;
+  $('finishStats').textContent = counts.skipped>0
+    ? `${counts.completed} of ${counts.total} completed • ${counts.skipped} skipped.`
+    : `${counts.completed} moves finished. Keep the momentum going.`;
   $('finishScreen').classList.remove('hidden');
   vibrate([100,70,100,70,180]);
 }
-function exitRunner(){clearTimer();releaseWakeLock();$('runner').classList.add('hidden');document.body.style.overflow=''}
+function exitRunner(){clearTimer();releaseWakeLock();skipReviewMode=false;$('runner').classList.add('hidden');$('skipReviewScreen')?.classList.add('hidden');document.body.style.overflow=''}
 function closeFinish(){$('finishScreen').classList.add('hidden');document.body.style.overflow=''}
 
 function syncRange(rangeId,outputId,onUpdate){
@@ -1064,13 +1043,13 @@ function renderEditor(){
 
 function setNotificationStatus(text,detail){$('notifStatus').textContent=text;$('subscriptionDetail').textContent=detail}
 function normalizeNotificationTime(value){return /^([01]\d|2[0-3]):[0-5]\d$/.test(value||'')?value:'07:00'}
-function getNotificationTime(){return normalizeNotificationTime(localStorage.getItem(NOTIFICATION_TIME_KEY)||'07:00')}
+function getNotificationTime(){return normalizeNotificationTime(localStorage.getItem(STORAGE_KEYS.notificationTime)||'07:00')}
 async function syncNotificationPreferences(){
   if(!oneSignalInstance) return;
   const enabled = oneSignalInstance.User.PushSubscription.optedIn === true;
   const time = getNotificationTime();
   $('notificationTime').value = time;
-  if(enabled) oneSignalInstance.User.addTags({name_wod_notifications:'1',name_wod_time:time,name_wod_timezone:TIMEZONE});
+  if(enabled) oneSignalInstance.User.addTags({name_wod_notifications:'1',name_wod_time:time,name_wod_timezone:APP_CONFIG.timezone});
   else oneSignalInstance.User.addTag('name_wod_notifications','0');
 }
 function refreshNotificationStatus(){
@@ -1094,7 +1073,7 @@ async function showTestNotification(){
 }
 async function registerServiceWorker(){
   if(!('serviceWorker' in navigator)) return;
-  try{const registration=await navigator.serviceWorker.register('sw.js',{scope:APP_PATH});console.log('Service worker registered.',registration.scope)}catch(error){console.error('Service worker registration failed.',error)}
+  try{const registration=await navigator.serviceWorker.register('sw.js',{scope:APP_CONFIG.path});console.log('Service worker registered.',registration.scope)}catch(error){console.error('Service worker registration failed.',error)}
 }
 function hideNotificationControls(){
   const controls=[$('enableNotificationsBtn'),$('notificationTime'),$('testNotificationBtn')];
@@ -1104,7 +1083,7 @@ async function initializeNotifications(){
   window.OneSignalDeferred=window.OneSignalDeferred||[];
   window.OneSignalDeferred.push(async OneSignal=>{
     try{
-      await OneSignal.init({appId:ONE_SIGNAL_APP_ID,serviceWorkerPath:'/Name-Workout/sw.js',serviceWorkerParam:{scope:APP_PATH},notifyButton:{enable:false},allowLocalhostAsSecureOrigin:true});
+      await OneSignal.init({appId:APP_CONFIG.notifications.oneSignalAppId,serviceWorkerPath:`${APP_CONFIG.path}sw.js`,serviceWorkerParam:{scope:APP_CONFIG.path},notifyButton:{enable:false},allowLocalhostAsSecureOrigin:true});
       oneSignalInstance=OneSignal;
       OneSignal.User.PushSubscription.addEventListener('change',async()=>{await syncNotificationPreferences();refreshNotificationStatus()});
       await syncNotificationPreferences();
@@ -1114,7 +1093,7 @@ async function initializeNotifications(){
   await registerServiceWorker();
 }
 function initializeNotificationFeature(){
-  if(!ENABLE_NOTIFICATIONS){hideNotificationControls();console.log('AMPED notifications are disabled.');return}
+  if(!APP_CONFIG.notifications.enabled){hideNotificationControls();console.log('AMPED notifications are disabled.');return}
   initializeNotifications();
   $('enableNotificationsBtn')?.addEventListener('click',async()=>{
     if(!oneSignalInstance){setNotificationStatus('Loading','OneSignal is still starting. Try again shortly.');return}
@@ -1128,7 +1107,7 @@ function initializeNotificationFeature(){
   $('notificationTime')?.addEventListener('change',async event=>{
     const time=normalizeNotificationTime(event.target.value);
     event.target.value=time;
-    localStorage.setItem(NOTIFICATION_TIME_KEY,time);
+    localStorage.setItem(STORAGE_KEYS.notificationTime,time);
     await syncNotificationPreferences();
     refreshNotificationStatus();
   });
@@ -1163,14 +1142,17 @@ $('rerollBtn').addEventListener('click',async()=>{await focusD20ForReroll();awai
 $('editBtn').addEventListener('click',()=>{$('previewCard').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});if(mode==='custom')$('customText').focus()});
 $('exitRunnerBtn').addEventListener('click',exitRunner);
 $('completeMoveBtn').addEventListener('click',completeCurrentMove);
-$('skipMoveBtn').addEventListener('click',()=>navigateRunner(1));
+$('skipMoveBtn').addEventListener('click',skipCurrentMove);
 $('prevMoveBtn').addEventListener('click',()=>navigateRunner(-1));
 $('timerBtn').addEventListener('click',toggleTimer);
 $('wakeBtn').addEventListener('click',()=>wakeLock?releaseWakeLock():requestWakeLock());
+$('doSkippedBtn').addEventListener('click',resumeSkippedExercises);
+$('finishWithSkipsBtn').addEventListener('click',finishWorkout);
 $('finishCloseBtn').addEventListener('click',closeFinish);
 $('finishAgainBtn').addEventListener('click',()=>{closeFinish();$('previewCard').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});if(mode==='custom')$('customText').select()});
 $('settingsBtn').addEventListener('click',()=>{$('settingsPanel').open=true;$('settingsPanel').scrollIntoView({behavior:'smooth'})});
-$('maxMascot')?.addEventListener('click',showMaxMessage);
+initializeBranding();
+$('mascotTrigger')?.addEventListener('click',showMascotMessage);
 setupRunnerSwipe();
 
 document.querySelectorAll('input[name="d20Mode"]').forEach(input=>input.addEventListener('change',()=>{resetD20Rolls();updateD20Controls()}));
@@ -1180,7 +1162,7 @@ setupD20GestureControls();
 $('d20ResetBtn').addEventListener('click',resetD20Rolls);
 
 $('dailyNameToggle').checked=dailyNameEnabled;
-$('dailyNameToggle').addEventListener('change',event=>{dailyNameEnabled=event.target.checked;localStorage.setItem(DAILY_NAME_ENABLED_KEY,String(dailyNameEnabled));applyScheduledName()});
+$('dailyNameToggle').addEventListener('change',event=>{dailyNameEnabled=event.target.checked;localStorage.setItem(STORAGE_KEYS.dailyNameEnabled,String(dailyNameEnabled));applyScheduledName()});
 $('defaultModeSelect').addEventListener('change',event=>{
   const next=saveDefaultMode(event.target.value);
   setMode(next);

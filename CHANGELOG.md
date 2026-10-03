@@ -1,3 +1,25 @@
+# v19 — Explicit skip states and end-of-workout review
+
+- Workout runner now tracks each move explicitly as `remaining`, `completed`, or `skipped`.
+- Swiping left or tapping Skip marks an unfinished move as skipped; swiping right only navigates back.
+- Added live workout status counts and per-move state dots so skipped moves stay visible.
+- Added a brief “SKIPPED — you can come back” cue when a move is skipped.
+- When the last remaining move is processed, skipped exercises trigger a review screen instead of silently completing the workout.
+- Review offers **Do skipped exercise(s)** or **Finish without it/them**.
+- Completing a skipped move clears its skipped state; skipped-review mode moves only through skipped exercises.
+- Completed-workout copy omits skipped exercises while reporting the honest completion count (for example, `5 of 6`).
+- Bumped the PWA cache to `amped-v28`.
+
+# v18 — Architecture and maintainability pass
+
+- Centralized app, mascot, storage, notification, dictionary, and D20 timing configuration in `config.js`.
+- Mascot identity is now a single value: `APP_CONFIG.mascot.name`. Easter-egg copy and accessibility labels are generated from it.
+- Renamed mascot DOM/CSS hooks to generic names so future mascot renames do not require structural code edits.
+- Moved exercise libraries and Workout-by-Roll templates into `workout-data.js`.
+- Expanded package validation to enforce 26 A–Z entries, 20 D20 exercises, 20 six-move D20 workout templates, valid roll references, and unique storage keys.
+- Added new modules to the offline cache and gated the disabled OneSignal service-worker import.
+- Preserved existing local-storage key strings and deployment path for backward compatibility.
+
 # v17 — Max returns + Roll Again focus
 
 - Switched the hidden bulb mascot back from Burnie to **Max** in the active app and documentation.
