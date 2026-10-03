@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Name WOD">
-  <meta name="description" content="Build today's workout from a scheduled name, random letters, a word, or a D20 roll.">
+  <meta name="description" content="Roll it. Sweat it. Build it. Choose a D20, name, letters, or word workout.">
   <title>Name WOD</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png" type="image/png">
@@ -32,8 +32,8 @@
       <div class="hero-art" aria-hidden="true"><img src="wod-hero.jpg" alt=""></div>
       <div class="hero-copy">
         <p class="eyebrow">Workout of the day</p>
-        <h1>Spell it.<br><span>Sweat it.</span></h1>
-        <p>Choose a name, letters, a word, or let a D20 build today's workout.</p>
+        <h1><span id="heroVerb">Roll it.</span><br><span>Sweat it.</span><br><span id="heroBuild">Build it.</span></h1>
+        <p id="heroDescription">Roll the D20 for today’s workout, or switch to Name, Letters, or Word.</p>
       </div>
     </section>
 
@@ -206,7 +206,7 @@
   <section id="finishScreen" class="finish-screen hidden">
     <img src="icon-192.png" alt="" width="120" height="120">
     <p class="eyebrow">WOD complete</p>
-    <h2 id="finishTitle">JEREMY<br>CONQUERED.</h2>
+    <h2 id="finishTitle">WORKOUT<br>COMPLETE.</h2>
     <p id="finishStats">10 moves finished.</p>
     <button id="finishCopyBtn" class="primary jumbo finish-copy" type="button"><span>COPY COMPLETED WORKOUT</span><small>Paste it straight into the group text</small></button>
     <button id="finishAgainBtn" class="secondary finish-secondary" type="button">Build another</button>

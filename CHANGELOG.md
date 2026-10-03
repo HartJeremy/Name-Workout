@@ -31,3 +31,7 @@
 - Replaced the native share action with a one-tap Copy workout clipboard action.
 - Added Copy completed workout directly to the completion screen for easy paste into group text.
 - Bumped the service-worker cache to v11.
+
+- Made the hero tagline mode-aware: Roll/Spell/Draw/Pick it. Sweat it. Build it.
+- Replaced the fixed CONQUERED completion headline with rotating motivational finish messages.
+- Bumped the PWA cache to v13.

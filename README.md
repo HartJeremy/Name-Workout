@@ -1,6 +1,6 @@
 # Name WOD
 
-Mobile-first PWA that builds a workout from a scheduled first name, random letters, a dictionary word, or a D20 roll.
+Mobile-first PWA with D20 as the default workout mode. Mode-aware tagline: D20 “Roll it. Sweat it. Build it.”; Name “Spell it. Sweat it. Build it.”; Letters “Draw it. Sweat it. Build it.”; Word “Pick it. Sweat it. Build it.” Name, random letters, and dictionary word modes remain available.
 
 ## Ready-to-deploy files
 

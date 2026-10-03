@@ -13,6 +13,24 @@ const ONE_SIGNAL_APP_ID = 'f753f501-63a3-42b9-85c9-a8e9a8d5bd30';
 const DICTIONARY_MODULE_URL = 'https://cdn.jsdelivr.net/npm/random-words@2.0.1/+esm';
 let dictionaryModulePromise = null;
 
+const MODE_HERO_COPY = {
+  custom:{verb:'Spell it.',description:'Spell a name into today’s workout.'},
+  letters:{verb:'Draw it.',description:'Draw random letters and turn them into today’s workout.'},
+  word:{verb:'Pick it.',description:'Pick a random word and turn it into today’s workout.'},
+  d20:{verb:'Roll it.',description:'Roll the D20 for today’s workout, or switch to Name, Letters, or Word.'}
+};
+
+const FINISH_MESSAGES = [
+  'STRONGER TODAY.',
+  'MOMENTUM BUILT.',
+  'WORK PUT IN.',
+  'KEEP BUILDING.',
+  'SHOWED UP STRONG.',
+  'ONE MORE IN.',
+  'PROGRESS EARNED.',
+  'BUILT FOR MORE.'
+];
+
 const INTENSITY_LEVELS = [
   {value:0.5,label:'✨ Spark',color:'#45c4e8'},
   {value:0.75,label:'🔋 Energized',color:'#55d187'},
@@ -279,7 +297,15 @@ function setMode(next){
   });
   document.querySelectorAll('.input-panel').forEach(panel => panel.classList.remove('active'));
   $(`${mode}Panel`).classList.add('active');
+  updateHeroCopy();
   updateBuilderCopy();
+}
+
+function updateHeroCopy(){
+  const hero = MODE_HERO_COPY[mode] || MODE_HERO_COPY.d20;
+  $('heroVerb').textContent = hero.verb;
+  $('heroBuild').textContent = 'Build it.';
+  $('heroDescription').textContent = hero.description;
 }
 
 function updateBuilderCopy(){
@@ -742,8 +768,9 @@ function finishWorkout(){
   clearTimer();
   releaseWakeLock();
   $('runner').classList.add('hidden');
-  $('finishTitle').innerHTML = `${escapeHtml(workoutDisplayName)}<br>CONQUERED.`;
-  $('finishStats').textContent = `${lastWorkout.length} moves finished. Workout complete.`;
+  const message = FINISH_MESSAGES[secureRandomInt(FINISH_MESSAGES.length)];
+  $('finishTitle').innerHTML = `${escapeHtml(workoutDisplayName)}<br>${escapeHtml(message)}`;
+  $('finishStats').textContent = `${lastWorkout.length} moves finished. Keep the momentum going.`;
   $('finishScreen').classList.remove('hidden');
   vibrate([100,70,100,70,180]);
 }
