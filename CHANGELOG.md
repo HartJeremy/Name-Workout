@@ -1,3 +1,16 @@
+# Changelog
+
+## v20 - Wake control + Max exercise guides
+- Replaced the ambiguous sun wake-lock control with a monitor-style keep-awake toggle that shows on/off state.
+- Added visible runner feedback when keep-awake is enabled, disabled, unsupported, or cannot be acquired.
+- Preserved the user's keep-awake choice across app visibility changes during a workout.
+- Added an info button to each workout preview row and active workout screen.
+- Added Max's Quick Guide bottom sheet with how-to directions, a form cue, and an easier option.
+- Added a dedicated exercise-guides.js module covering all 26 built-in exercise names.
+- Added validation that every default exercise has a guide and that HTML ids are unique.
+- Removed a duplicate Export all button id found during validation.
+- Service-worker cache bumped to amped-v29.
+
 # v19 — Explicit skip states and end-of-workout review
 
 - Workout runner now tracks each move explicitly as `remaining`, `completed`, or `skipped`.
@@ -155,3 +168,9 @@
 - Rebalanced the Workout-by-Roll templates to reduce repetitive shoulder/plank and cardio stacking.
 - Added a fun title to every D20 workout while retaining the plain grouping in parentheses.
 - Cache bumped to `amped-v22`.
+
+
+## v21 — Cleaner exercise preview
+- Removed the redundant `D20 exercise #` subtext from D20 exercise preview rows.
+- Preserved useful per-side timing/detail subtext where present.
+- Cache bumped to `amped-v30`.

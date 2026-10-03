@@ -64,3 +64,10 @@ Implemented in v19:
 - The skipped-review queue operates only on skipped moves, so it does not replay completed work.
 
 This is preferable to parallel `completedMoves` / `skippedMoves` sets because mutually exclusive state cannot drift between collections.
+
+## v20 UX architecture additions
+- Exercise instructions are separated into `exercise-guides.js` rather than embedded in runner rendering logic.
+- The package validator enforces guide coverage for every default exercise.
+- The validator now rejects duplicate HTML ids.
+- Wake-lock desired state is tracked separately from the browser's current wake-lock handle, preventing automatic reacquisition after a user intentionally turns keep-awake off.
+- Exercise help uses one reusable dialog for preview and runner contexts.

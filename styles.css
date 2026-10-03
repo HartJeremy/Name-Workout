@@ -67,3 +67,31 @@
 @media(max-width:600px){.runner-state-dots{gap:4px}.runner-state-dot{width:18px;height:18px;font-size:.62rem}.runner-state-summary{font-size:.61rem}.runner-skip-notice{top:10px;font-size:.66rem}}
 .runner-state-dots{flex-wrap:wrap}
 .runner-state-dots{flex-wrap:wrap}
+
+/* v20 runner controls and Max exercise guide */
+.wake-toggle{position:relative;display:grid;place-items:center;color:var(--muted)}
+.wake-screen-icon{position:relative;width:24px;height:16px;display:block;border:2px solid currentColor;border-radius:4px}
+.wake-screen-icon:before{content:"";position:absolute;left:8px;top:4px;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.45}
+.wake-screen-icon:after{content:"";position:absolute;left:7px;bottom:-6px;width:7px;height:2px;border-radius:2px;background:currentColor}
+.wake-toggle[aria-pressed="true"]{color:var(--gold);border-color:#ffbd1965;background:#ffbd1915;box-shadow:0 0 18px #ffbd1922 inset}
+.wake-toggle[aria-pressed="true"] .wake-screen-icon{box-shadow:0 0 12px #ffbd1960}
+.wake-toggle[aria-pressed="true"] .wake-screen-icon:before{opacity:1;box-shadow:0 0 8px #ffbd19}
+.wake-toggle.unsupported{opacity:.45}
+.runner-skip-notice.wake{border-color:#ffbd196b;background:#161006ed;color:var(--gold)}
+.runner-info-btn{position:absolute;z-index:4;top:12px;right:6px;width:42px;height:42px;border:1px solid #ffbd1950;border-radius:50%;background:#0d0b07dd;color:var(--gold);font-size:1rem;font-weight:1000;font-style:italic;box-shadow:0 6px 20px #0008}
+.runner-info-btn:focus-visible,.preview-info-btn:focus-visible,.exercise-info-close:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.preview-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px}
+.preview-info-btn{width:34px;height:34px;display:grid;place-items:center;border:1px solid #ffbd1945;border-radius:50%;background:#ffbd190c;color:var(--gold);font-weight:1000;font-style:italic}
+.exercise-info-sheet{position:fixed;z-index:140;inset:0;display:flex;align-items:flex-end;justify-content:center;padding:18px 14px calc(18px + var(--safe-bottom));background:#000b;backdrop-filter:blur(7px)}
+.exercise-info-panel{width:min(620px,100%);max-height:min(82vh,760px);overflow:auto;padding:20px;border:1px solid #ffbd194f;border-radius:28px;background:linear-gradient(180deg,#1a160d,#090909 52%);box-shadow:0 24px 90px #000}
+.exercise-info-head{display:grid;grid-template-columns:48px 1fr 44px;gap:11px;align-items:center}
+.exercise-info-mascot{width:48px;height:48px;display:grid;place-items:center;border:1px solid #ffbd1945;border-radius:15px;background:#ffbd1914;font-size:1.65rem;box-shadow:0 0 24px #ffbd1920 inset}
+.exercise-info-head .eyebrow{margin:0 0 3px}
+.exercise-info-head h2{margin:0;color:var(--text);font-size:1.55rem;line-height:1.05}
+.exercise-info-close{width:44px;height:44px;border:1px solid var(--line);border-radius:14px;background:#ffffff0b;color:var(--text);font-size:1.6rem}
+.exercise-info-amount{margin:16px 0;padding:11px 13px;border:1px solid #ffbd193d;border-radius:14px;background:#ffbd190c;color:var(--gold);font-weight:900}
+.exercise-info-section{padding:13px 0;border-top:1px solid var(--line);text-align:left}
+.exercise-info-section h3{margin:0 0 5px;color:var(--gold);font-size:.68rem;letter-spacing:.14em}
+.exercise-info-section p{margin:0;color:var(--text);font-size:.92rem;line-height:1.45}
+body.info-open{overflow:hidden}
+@media(max-width:600px){.preview-move{grid-template-columns:40px 1fr auto}.preview-row-actions{gap:5px}.preview-info-btn{width:32px;height:32px}.runner-info-btn{top:7px;right:1px;width:38px;height:38px}.exercise-info-sheet{padding-left:9px;padding-right:9px}.exercise-info-panel{border-radius:24px 24px 18px 18px;padding:17px}}

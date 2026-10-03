@@ -15,6 +15,7 @@ import {
   D20_WORKOUTS,
   d20WorkoutLabel
 } from './workout-data.js';
+import { getExerciseGuide } from './exercise-guides.js';
 
 let dictionaryModulePromise = null;
 const MASCOT_MESSAGES = buildMascotMessages();
@@ -52,6 +53,8 @@ let timerInterval = null;
 let timerRemaining = 0;
 let timerSwitchTriggered = false;
 let wakeLock = null;
+let wakeLockDesired = false;
+let exerciseInfoReturnFocus = null;
 const previewTimers = new Map();
 
 function dateISOForOffset(days = 0) {
@@ -731,8 +734,12 @@ function renderPreview(){
   }else{
     $('workoutTagline').textContent = 'Every letter earns a move.';
   }
-  $('exercisePreview').innerHTML = lastWorkout.map((item,index) => `<div class="preview-move"><span class="preview-letter">${escapeHtml(item.letter)}</span><span><b>${escapeHtml(item.headline)}</b><small>${item.detail?escapeHtml(item.detail):item.sourceRoll?`D20 exercise ${item.sourceRoll}`:'Complete the full amount'}</small></span>${item.unit==='sec'?`<button class="preview-timer-btn" type="button" data-index="${index}" data-seconds="${item.amount}"><span class="timer-btn-time">${item.amount}s</span></button>`:`<em class="preview-index">${index+1}</em>`}</div>`).join('');
+  $('exercisePreview').innerHTML = lastWorkout.map((item,index) => {
+    const subtext = item.detail ? item.detail : (item.sourceRoll ? '' : 'Complete the full amount');
+    return `<div class="preview-move"><span class="preview-letter">${escapeHtml(item.letter)}</span><span><b>${escapeHtml(item.headline)}</b>${subtext?`<small>${escapeHtml(subtext)}</small>`:''}</span><span class="preview-row-actions"><button class="preview-info-btn" type="button" data-info-index="${index}" aria-label="How to do ${escapeHtml(item.name)}">i</button>${item.unit==='sec'?`<button class="preview-timer-btn" type="button" data-index="${index}" data-seconds="${item.amount}"><span class="timer-btn-time">${item.amount}s</span></button>`:`<em class="preview-index">${index+1}</em>`}</span></div>`;
+  }).join('');
   document.querySelectorAll('.preview-timer-btn').forEach(button => button.addEventListener('click',() => togglePreviewTimer(button)));
+  document.querySelectorAll('.preview-info-btn').forEach(button => button.addEventListener('click',() => openExerciseInfo(Number(button.dataset.infoIndex),button)));
   $('rerollBtn').classList.toggle('hidden',!lastBuildKind.startsWith('d20'));
   renderTomorrowName();
 }
@@ -780,15 +787,65 @@ async function copyWorkout({completed=false,button=null} = {}){
   }
 }
 
-async function requestWakeLock(){
-  if(!('wakeLock' in navigator)) return;
+function openExerciseInfo(index,trigger=null){
+  const item = lastWorkout[index];
+  if(!item) return;
+  exerciseInfoReturnFocus = trigger || document.activeElement;
+  const guide = getExerciseGuide(item.name);
+  $('exerciseInfoGuideLabel').textContent = `${APP_CONFIG.mascot.name.toUpperCase()}'S QUICK GUIDE`;
+  $('exerciseInfoTitle').textContent = item.name;
+  $('exerciseInfoAmount').textContent = item.headline + (item.detail ? ` - ${item.detail}` : '');
+  $('exerciseInfoHow').textContent = guide?.how || 'No built-in guide is saved for this custom exercise yet.';
+  $('exerciseInfoCue').textContent = guide?.cue || 'Use a controlled range of motion and stop if the movement does not feel right.';
+  $('exerciseInfoEasier').textContent = guide?.easier || 'Reduce the range, pace, or repetitions as needed.';
+  $('exerciseInfoSheet').classList.remove('hidden');
+  document.body.classList.add('info-open');
+  $('exerciseInfoCloseBtn').focus();
+}
+function closeExerciseInfo(){
+  $('exerciseInfoSheet').classList.add('hidden');
+  document.body.classList.remove('info-open');
+  const target = exerciseInfoReturnFocus;
+  exerciseInfoReturnFocus = null;
+  try{target?.focus({preventScroll:true})}catch(_){target?.focus?.()}
+}
+
+function updateWakeButton(){
+  const button = $('wakeBtn');
+  if(!button) return;
+  const supported = 'wakeLock' in navigator;
+  const active = Boolean(wakeLock);
+  button.setAttribute('aria-pressed',String(active));
+  button.classList.toggle('unsupported',!supported);
+  button.title = !supported ? 'Keep awake is unavailable on this device' : active ? 'Screen will stay awake' : 'Use normal screen timeout';
+  button.setAttribute('aria-label',button.title);
+}
+async function requestWakeLock({notify=false}={}){
+  if(!('wakeLock' in navigator)){
+    updateWakeButton();
+    if(notify) showRunnerNotice('KEEP AWAKE IS NOT AVAILABLE ON THIS DEVICE',{tone:'wake',duration:1800});
+    return false;
+  }
   try{
     wakeLock = await navigator.wakeLock.request('screen');
-    $('wakeBtn').textContent = '☀';
-    $('wakeBtn').title = 'Screen will stay awake';
-  }catch(error){console.warn('Wake lock unavailable.',error)}
+    wakeLock.addEventListener('release',()=>{wakeLock=null;updateWakeButton()},{once:true});
+    updateWakeButton();
+    if(notify) showRunnerNotice('SCREEN WILL STAY AWAKE',{tone:'wake'});
+    return true;
+  }catch(error){
+    console.warn('Wake lock unavailable.',error);
+    wakeLock=null;
+    updateWakeButton();
+    if(notify) showRunnerNotice('KEEP AWAKE COULD NOT BE TURNED ON',{tone:'wake',duration:1800});
+    return false;
+  }
 }
-async function releaseWakeLock(){try{await wakeLock?.release()}catch{}wakeLock=null}
+async function releaseWakeLock({notify=false}={}){
+  try{await wakeLock?.release()}catch{}
+  wakeLock=null;
+  updateWakeButton();
+  if(notify) showRunnerNotice('NORMAL SCREEN TIMEOUT RESTORED',{tone:'wake'});
+}
 function workoutStateCounts(){
   const completed = moveStates.filter(state => state === MOVE_STATE.COMPLETED).length;
   const skipped = moveStates.filter(state => state === MOVE_STATE.SKIPPED).length;
@@ -803,6 +860,7 @@ function startWorkout(){
   $('skipReviewScreen')?.classList.add('hidden');
   $('runner').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  wakeLockDesired = true;
   requestWakeLock();
   renderRunner();
 }
@@ -824,6 +882,8 @@ function renderRunner(){
   $('runnerLetter').textContent = item.letter;
   $('runnerExercise').textContent = item.headline;
   $('runnerSplit').textContent = item.detail;
+  $('runnerInfoBtn').setAttribute('aria-label',`How to do ${item.name}`);
+  updateWakeButton();
   $('runnerMoveState').textContent = currentState === MOVE_STATE.SKIPPED ? 'SKIPPED — finish it now or leave it skipped' : currentState === MOVE_STATE.COMPLETED ? 'COMPLETED' : '';
   $('runnerMoveState').className = `runner-move-state ${currentState}`;
   $('prevMoveBtn').disabled = currentMove === 0;
@@ -839,14 +899,16 @@ function renderRunner(){
     updateTimerDisplay();
   }else $('timerBox').classList.add('hidden');
 }
-function showSkipNotice(){
+function showRunnerNotice(message,{tone='skip',duration=1100}={}){
   const notice = $('runnerSkipNotice');
   if(!notice) return;
   clearTimeout(skipNoticeTimer);
-  notice.textContent = 'SKIPPED — you can come back';
+  notice.textContent = message;
+  notice.classList.toggle('wake',tone === 'wake');
   notice.classList.add('show');
-  skipNoticeTimer = setTimeout(()=>notice.classList.remove('show'),1100);
+  skipNoticeTimer = setTimeout(()=>notice.classList.remove('show'),duration);
 }
+function showSkipNotice(){showRunnerNotice('SKIPPED - you can come back')}
 function markMoveSkipped(index,{notify=true}={}){
   if(moveStates[index] === MOVE_STATE.REMAINING){
     moveStates[index] = MOVE_STATE.SKIPPED;
@@ -997,7 +1059,7 @@ function finishWorkout(){
   $('finishScreen').classList.remove('hidden');
   vibrate([100,70,100,70,180]);
 }
-function exitRunner(){clearTimer();releaseWakeLock();skipReviewMode=false;$('runner').classList.add('hidden');$('skipReviewScreen')?.classList.add('hidden');document.body.style.overflow=''}
+function exitRunner(){clearTimer();wakeLockDesired=false;releaseWakeLock();skipReviewMode=false;$('runner').classList.add('hidden');$('skipReviewScreen')?.classList.add('hidden');document.body.style.overflow=''}
 function closeFinish(){$('finishScreen').classList.add('hidden');document.body.style.overflow=''}
 
 function syncRange(rangeId,outputId,onUpdate){
@@ -1145,7 +1207,11 @@ $('completeMoveBtn').addEventListener('click',completeCurrentMove);
 $('skipMoveBtn').addEventListener('click',skipCurrentMove);
 $('prevMoveBtn').addEventListener('click',()=>navigateRunner(-1));
 $('timerBtn').addEventListener('click',toggleTimer);
-$('wakeBtn').addEventListener('click',()=>wakeLock?releaseWakeLock():requestWakeLock());
+$('wakeBtn').addEventListener('click',()=>{if(wakeLock){wakeLockDesired=false;releaseWakeLock({notify:true})}else{wakeLockDesired=true;requestWakeLock({notify:true})}});
+$('runnerInfoBtn').addEventListener('click',event=>openExerciseInfo(currentMove,event.currentTarget));
+$('exerciseInfoCloseBtn').addEventListener('click',closeExerciseInfo);
+$('exerciseInfoSheet').addEventListener('click',event=>{if(event.target === $('exerciseInfoSheet')) closeExerciseInfo()});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('exerciseInfoSheet').classList.contains('hidden')) closeExerciseInfo()});
 $('doSkippedBtn').addEventListener('click',resumeSkippedExercises);
 $('finishWithSkipsBtn').addEventListener('click',finishWorkout);
 $('finishCloseBtn').addEventListener('click',closeFinish);
@@ -1229,4 +1295,4 @@ $('importExercisesInput').addEventListener('change',async event=>{
 });
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredPrompt=event;$('installBtn').classList.remove('hidden')});
 $('installBtn').addEventListener('click',async()=>{if(!deferredPrompt)return;await deferredPrompt.prompt();deferredPrompt=null;$('installBtn').classList.add('hidden')});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!$('runner').classList.contains('hidden')&&!wakeLock)requestWakeLock()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!$('runner').classList.contains('hidden')&&wakeLockDesired&&!wakeLock)requestWakeLock()});

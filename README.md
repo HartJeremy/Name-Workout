@@ -134,3 +134,9 @@ AMPED keeps change-prone configuration separate from behavior:
 - `sw.js` — offline caching/service-worker behavior.
 
 To rename the bulb mascot, change only `APP_CONFIG.mascot.name` in `config.js`. The UI accessibility label and Easter-egg messages are generated from that value. Existing local-storage key strings remain intentionally unchanged for backward compatibility with installed users.
+
+## Workout guidance
+Each built-in exercise has a reusable guide in `exercise-guides.js`. The preview list and active workout runner expose the guide through an info button. The guide panel uses the configured mascot name from `APP_CONFIG`, so renaming Max still requires only the single mascot configuration change. Custom exercise names without a matching built-in guide receive a safe generic fallback.
+
+## Keep-awake control
+The workout runner requests the Screen Wake Lock API when a workout starts. The top-right monitor control shows the actual active state and provides visible feedback when toggled. If the platform releases the wake lock while the app is hidden, AMPED reacquires it when the app becomes visible only if the user still wants keep-awake enabled.
