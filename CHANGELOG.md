@@ -1,4 +1,10 @@
-# AMPED update
+# AMPED changelog
+
+## v9 — Mobile brand fix
+- Keeps **AMPED** on one line in the top bar on mobile.
+- Removes the previous stacked AMP / ED treatment.
+- Tightens mobile brand spacing while keeping the Max icon and AMPED branding.
+- Bumps the PWA cache to `amped-v18`.
 
 ## v8 — Max Easter egg
 
