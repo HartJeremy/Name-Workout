@@ -34,51 +34,51 @@ const FINISH_MESSAGES = [
   'BUILT FOR MORE.'
 ];
 
-// Burnie is the bulb mascot. He stays intentionally subtle as an Easter egg.
-const BURNIE_MESSAGES = [
-  'Burnie is fully charged.',
-  'Burnie has an idea. It involves reps.',
-  'Burnie was told this was a light workout.',
+// Max is the bulb mascot. He stays intentionally subtle as an Easter egg.
+const MAX_MESSAGES = [
+  'Max is fully charged.',
+  'Max has an idea. It involves reps.',
+  'Max was told this was a light workout.',
   'Current status: AMPED.',
-  'Burnie brought the energy. You bring the reps.',
-  'Burnie says the circuit is live.',
-  'Burnie says the bulb is on. Your turn.',
-  'Burnie is operating at maximum wattage.',
-  'Burnie says this one has potential.',
-  'Burnie says today\'s forecast: 100% chance of reps.',
-  'Burnie is glowing with questionable confidence.',
-  'Burnie says that\'s enough thinking.',
-  'Burnie says resistance is part of the circuit.',
-  'Burnie is suspiciously excited about burpees.',
-  'Burnie says this looked easier on paper.',
-  'Burnie says don\'t blame the dice.',
-  'Burnie claims the D20 made him do it.',
-  'Burnie says it\'s only a few reps. He may be lying.',
-  'Burnie has zero muscles and many opinions.',
-  'Burnie says sweat is just the cooling system.',
-  'Burnie says no warranty coverage for skipped reps.',
-  'Burnie says one more won\'t trip the breaker.',
-  'Burnie is monitoring your voltage.',
-  'Burnie says consider this a power cycle.',
-  'Burnie says your rest period is under review.',
-  'Burnie says you\'re cleared for full power.',
-  'Burnie says the switch only works if you flip it.',
-  'Burnie says the current plan is: keep moving.',
-  'Burnie says every rep adds a little charge.',
-  'Burnie says low battery still counts as battery.',
-  'Burnie says the meter is moving in the right direction.',
-  'Burnie says you\'ve got enough juice for one more.',
-  'Burnie says this is how you build a stronger circuit.',
-  'Burnie says the light stays on until the workout is done.',
-  'Burnie says power up. No dramatic montage required.',
-  'Burnie says progress is currently flowing.',
-  'Burnie says your output is looking suspiciously good.',
-  'Burnie says this workout is now officially energized.',
-  'Burnie says the breaker is holding. Keep going.',
-  'Burnie says you\'re more charged than you think.'
+  'Max brought the energy. You bring the reps.',
+  'Max says the circuit is live.',
+  'Max says the bulb is on. Your turn.',
+  'Max is operating at maximum wattage.',
+  'Max says this one has potential.',
+  'Max says today\'s forecast: 100% chance of reps.',
+  'Max is glowing with questionable confidence.',
+  'Max says that\'s enough thinking.',
+  'Max says resistance is part of the circuit.',
+  'Max is suspiciously excited about burpees.',
+  'Max says this looked easier on paper.',
+  'Max says don\'t blame the dice.',
+  'Max claims the D20 made him do it.',
+  'Max says it\'s only a few reps. He may be lying.',
+  'Max has zero muscles and many opinions.',
+  'Max says sweat is just the cooling system.',
+  'Max says no warranty coverage for skipped reps.',
+  'Max says one more won\'t trip the breaker.',
+  'Max is monitoring your voltage.',
+  'Max says consider this a power cycle.',
+  'Max says your rest period is under review.',
+  'Max says you\'re cleared for full power.',
+  'Max says the switch only works if you flip it.',
+  'Max says the current plan is: keep moving.',
+  'Max says every rep adds a little charge.',
+  'Max says low battery still counts as battery.',
+  'Max says the meter is moving in the right direction.',
+  'Max says you\'ve got enough juice for one more.',
+  'Max says this is how you build a stronger circuit.',
+  'Max says the light stays on until the workout is done.',
+  'Max says power up. No dramatic montage required.',
+  'Max says progress is currently flowing.',
+  'Max says your output is looking suspiciously good.',
+  'Max says this workout is now officially energized.',
+  'Max says the breaker is holding. Keep going.',
+  'Max says you\'re more charged than you think.'
 ];
-let burnieToastTimer = null;
-let lastBurnieMessageIndex = -1;
+let maxToastTimer = null;
+let lastMaxMessageIndex = -1;
 let switchFlashTimer = null;
 
 const INTENSITY_LEVELS = [
@@ -555,19 +555,19 @@ async function buildWorkoutFromInput(){
   showPreview();
 }
 
-function showBurnieMessage(){
-  const toast = $('burnieToast');
+function showMaxMessage(){
+  const toast = $('maxToast');
   if(!toast) return;
-  let messageIndex = secureRandomInt(BURNIE_MESSAGES.length);
-  if(BURNIE_MESSAGES.length > 1 && messageIndex === lastBurnieMessageIndex){
-    messageIndex = (messageIndex + 1 + secureRandomInt(BURNIE_MESSAGES.length - 1)) % BURNIE_MESSAGES.length;
+  let messageIndex = secureRandomInt(MAX_MESSAGES.length);
+  if(MAX_MESSAGES.length > 1 && messageIndex === lastMaxMessageIndex){
+    messageIndex = (messageIndex + 1 + secureRandomInt(MAX_MESSAGES.length - 1)) % MAX_MESSAGES.length;
   }
-  lastBurnieMessageIndex = messageIndex;
-  const message = BURNIE_MESSAGES[messageIndex];
+  lastMaxMessageIndex = messageIndex;
+  const message = MAX_MESSAGES[messageIndex];
   toast.textContent = message;
   toast.classList.add('show');
-  if(burnieToastTimer) clearTimeout(burnieToastTimer);
-  burnieToastTimer = setTimeout(()=>toast.classList.remove('show'),2600);
+  if(maxToastTimer) clearTimeout(maxToastTimer);
+  maxToastTimer = setTimeout(()=>toast.classList.remove('show'),2600);
   vibrate(20);
 }
 
@@ -640,7 +640,7 @@ class D20CanvasRenderer{
     const dt=Math.min((now-this.last)/1000,.05);this.last=now;
     if(this.state==='roll'){
       const p=Math.min((now-this.started)/this.duration,1),speed=this.reduce?0:((18+19*this.power)*Math.pow(1-p,1.6)+3.5);this.q=qNorm(qMul(qAxis(this.axis,speed*dt),this.q));this.offsetY=this.reduce?0:Math.abs(Math.sin(p*Math.PI*2.35))*(.3+.25*this.power)*(1-p*.45);this.offsetX=this.reduce?0:this.flickX*.5*this.power*Math.sin(p*Math.PI);
-      if(p>=1){this.state='settle';this.started=now;this.settleFrom=[...this.q];this.settleDuration=this.reduce?80:430}
+      if(p>=1){this.state='settle';this.started=now;this.settleFrom=[...this.q];this.settleDuration=this.reduce?80:560}
     }else if(this.state==='settle'){
       const p=Math.min((now-this.started)/this.settleDuration,1),e=1-Math.pow(1-p,3);this.q=qSlerp(this.settleFrom,this.target,e);this.offsetX*=1-e;this.offsetY=Math.sin(p*Math.PI)*.08*(1-p);
       if(p>=1){this.q=[...this.target];this.state='idle';this.offsetX=0;this.offsetY=0;const done=this.resolve;this.resolve=null;done?.()}
@@ -661,7 +661,7 @@ const d20Visual = new D20CanvasRenderer($('d20Canvas'),$('d20Shadow'));
 let pendingD20Gesture = null;
 let suppressD20ClickUntil = 0;
 
-async function animateD20(finalValue,duration = 650){
+async function animateD20(finalValue,duration = 850){
   const value=$('d20Value');value.textContent='…';value.classList.remove('landed');
   const gesture=pendingD20Gesture;pendingD20Gesture=null;
   await d20Visual.roll(finalValue,duration,gesture);
@@ -748,14 +748,14 @@ async function rollExerciseWorkout(forceAuto=false){
     d20ManualRolls = [];
     renderD20History([]);
     $('d20Status').textContent = `Rolling ${count} exercise${count===1?'':'s'}…`;
-    const duration = count <= 6 ? 520 : count <= 12 ? 330 : 230;
+    const duration = count <= 6 ? 760 : count <= 12 ? 620 : 500;
     for(let index=0; index<count; index+=1){
       const roll = rollD20();
       await animateD20(roll,duration);
       d20ManualRolls.push(roll);
       renderD20History(d20ManualRolls);
       $('d20Status').textContent = `Roll ${index+1} of ${count}: ${roll} — ${d20Exercises[roll-1].name}`;
-      if(index < count-1) await wait(count > 12 ? 60 : 100);
+      if(index < count-1) await wait(950);
     }
     finalizeD20ExerciseWorkout(d20ManualRolls);
     return;
@@ -763,7 +763,7 @@ async function rollExerciseWorkout(forceAuto=false){
 
   if(d20ManualRolls.length >= count) resetD20Rolls();
   const roll = rollD20();
-  await animateD20(roll,700);
+  await animateD20(roll,900);
   d20ManualRolls.push(roll);
   renderD20History(d20ManualRolls);
   $('d20Status').textContent = `Roll ${d20ManualRolls.length} of ${count}: ${roll} — ${d20Exercises[roll-1].name}`;
@@ -784,7 +784,7 @@ function finalizeD20ExerciseWorkout(rolls){
 async function rollFullWorkout(){
   const roll = rollD20();
   $('d20Status').textContent = 'Rolling for 1 of 20 complete workouts…';
-  await animateD20(roll,850);
+  await animateD20(roll,1000);
   lastD20WorkoutRoll = roll;
   lastD20Rolls = [roll];
   lastWorkout = buildD20TemplateWorkout(roll);
@@ -1151,7 +1151,15 @@ $('upperCase').addEventListener('change',()=>{
 $('startBtn').addEventListener('click',startWorkout);
 $('copyBtn').addEventListener('click',event=>copyWorkout({button:event.currentTarget}));
 $('finishCopyBtn').addEventListener('click',event=>copyWorkout({completed:true,button:event.currentTarget}));
-$('rerollBtn').addEventListener('click',async()=>{setMode('d20');await rollD20Selection({forceAuto:true})});
+async function focusD20ForReroll(){
+  setMode('d20');
+  $('previewCard').classList.add('hidden');
+  const die = $('d20RollBtn');
+  die.scrollIntoView({behavior:'smooth',block:'center'});
+  try{die.focus({preventScroll:true})}catch(_){die.focus()}
+  await wait(window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 80 : 500);
+}
+$('rerollBtn').addEventListener('click',async()=>{await focusD20ForReroll();await rollD20Selection({forceAuto:true})});
 $('editBtn').addEventListener('click',()=>{$('previewCard').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});if(mode==='custom')$('customText').focus()});
 $('exitRunnerBtn').addEventListener('click',exitRunner);
 $('completeMoveBtn').addEventListener('click',completeCurrentMove);
@@ -1162,7 +1170,7 @@ $('wakeBtn').addEventListener('click',()=>wakeLock?releaseWakeLock():requestWake
 $('finishCloseBtn').addEventListener('click',closeFinish);
 $('finishAgainBtn').addEventListener('click',()=>{closeFinish();$('previewCard').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});if(mode==='custom')$('customText').select()});
 $('settingsBtn').addEventListener('click',()=>{$('settingsPanel').open=true;$('settingsPanel').scrollIntoView({behavior:'smooth'})});
-$('burnieMascot')?.addEventListener('click',showBurnieMessage);
+$('maxMascot')?.addEventListener('click',showMaxMessage);
 setupRunnerSwipe();
 
 document.querySelectorAll('input[name="d20Mode"]').forEach(input=>input.addEventListener('change',()=>{resetD20Rolls();updateD20Controls()}));

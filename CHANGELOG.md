@@ -1,3 +1,17 @@
+# v17 — Max returns + Roll Again focus
+
+- Switched the hidden bulb mascot back from Burnie to **Max** in the active app and documentation.
+- Updated **Roll again** so it returns the user to the D20, centers/focuses the die, then starts the next roll.
+- Preserved the slower v16 D20 pacing, 950 ms multi-roll pause, 3D flick/drag/tap controls, swipe workout navigation, timers, settings, and workout libraries.
+- Bumped the PWA cache to `amped-v26`.
+
+# v16 — D20 roll pacing
+
+- Slowed the D20 tumble and settling animation so each result is easier to watch.
+- Added a 950 ms pause between automatic D20 rolls so each result remains visible before the next throw.
+- Kept manual roll, flick/drag/tap controls, swipe workout navigation, settings, workout libraries, Burnie Easter eggs, and all timer behavior unchanged.
+- Bumped the PWA cache to `amped-v25`.
+
 # v15 — Burnie the Bulb
 
 - Renamed the hidden bulb mascot from Max to **Burnie**.
