@@ -1,4 +1,22 @@
+# v15 — Burnie the Bulb
+
+- Renamed the hidden bulb mascot from Max to **Burnie**.
+- Updated Burnie’s Easter-egg messages, accessibility label, tap target, toast identifiers, and current documentation.
+- Kept the 3D D20, flick/drag/tap roll, swipe workout navigation, switch-sides timer, settings, libraries, and workout logic unchanged.
+- Bumped the PWA cache to `amped-v24`.
+
 # v11 — Better Max + timed side-switch cue
+
+## v14 — D20 visual + swipe navigation
+
+- Replaced the flat SVG die with a self-contained canvas-rendered 3D D20.
+- Added tactile drag/flick control; flick direction and speed influence the throw.
+- Tap-to-roll, auto-roll, manual multi-roll, workout-by-roll, history, settings, and saved libraries remain intact.
+- Added swipe navigation to the active workout runner: swipe left for next/skip, swipe right for back.
+- Swipe navigation never marks a move complete; DONE remains the completion action.
+- Added subtle runner swipe guidance and transition animation.
+- Bumped the PWA cache to `amped-v23`.
+
 
 ## v12 - Max Easter egg expansion
 - Restored Max's original hidden-character tone.
@@ -93,3 +111,11 @@
 - Made the hero tagline mode-aware: Roll/Spell/Draw/Pick it. Sweat it. Build it.
 - Replaced the fixed CONQUERED completion headline with rotating motivational finish messages.
 - Bumped the PWA cache to v13.
+
+## v13 — D20 library + workout rebalance
+- Added a D20 → Exercise editor in Settings alongside A–Z → Exercise.
+- D20 customizations now drive both Exercise by Roll and Workout by Roll.
+- Exercise export/import now includes both A–Z and D20 libraries, while still accepting older A–Z-only exports.
+- Rebalanced the Workout-by-Roll templates to reduce repetitive shoulder/plank and cardio stacking.
+- Added a fun title to every D20 workout while retaining the plain grouping in parentheses.
+- Cache bumped to `amped-v22`.

@@ -6,6 +6,9 @@ const RECENT_NAMES_KEY = 'nameWorkoutRecentNames';
 const DAILY_NAME_ENABLED_KEY = 'nameWorkoutDailyNameEnabled';
 const DEFAULT_MODE_KEY = 'nameWorkoutDefaultMode';
 const NOTIFICATION_TIME_KEY = 'nameWorkoutNotificationTime';
+const D20_STORAGE_KEY = 'ampedD20Exercises';
+const D20_EXERCISE_LIBRARY_VERSION_KEY = 'ampedD20ExerciseLibraryVersion';
+const D20_EXERCISE_LIBRARY_VERSION = '1';
 const SCHEDULE_URL = 'notify-schedule.json';
 const TIMEZONE = 'America/New_York';
 const APP_PATH = '/Name-Workout/';
@@ -31,51 +34,51 @@ const FINISH_MESSAGES = [
   'BUILT FOR MORE.'
 ];
 
-// Max is the bulb mascot. He stays intentionally subtle as an Easter egg.
-const MAX_MESSAGES = [
-  'Max is fully charged.',
-  'Max has an idea. It involves reps.',
-  'Max was told this was a light workout.',
+// Burnie is the bulb mascot. He stays intentionally subtle as an Easter egg.
+const BURNIE_MESSAGES = [
+  'Burnie is fully charged.',
+  'Burnie has an idea. It involves reps.',
+  'Burnie was told this was a light workout.',
   'Current status: AMPED.',
-  'Max brought the energy. You bring the reps.',
-  'Max says the circuit is live.',
-  'Max says the bulb is on. Your turn.',
-  'Max is operating at maximum wattage.',
-  'Max says this one has potential.',
-  'Max says today\'s forecast: 100% chance of reps.',
-  'Max is glowing with questionable confidence.',
-  'Max says that\'s enough thinking.',
-  'Max says resistance is part of the circuit.',
-  'Max is suspiciously excited about burpees.',
-  'Max says this looked easier on paper.',
-  'Max says don\'t blame the dice.',
-  'Max claims the D20 made him do it.',
-  'Max says it\'s only a few reps. He may be lying.',
-  'Max has zero muscles and many opinions.',
-  'Max says sweat is just the cooling system.',
-  'Max says no warranty coverage for skipped reps.',
-  'Max says one more won\'t trip the breaker.',
-  'Max is monitoring your voltage.',
-  'Max says consider this a power cycle.',
-  'Max says your rest period is under review.',
-  'Max says you\'re cleared for full power.',
-  'Max says the switch only works if you flip it.',
-  'Max says the current plan is: keep moving.',
-  'Max says every rep adds a little charge.',
-  'Max says low battery still counts as battery.',
-  'Max says the meter is moving in the right direction.',
-  'Max says you\'ve got enough juice for one more.',
-  'Max says this is how you build a stronger circuit.',
-  'Max says the light stays on until the workout is done.',
-  'Max says power up. No dramatic montage required.',
-  'Max says progress is currently flowing.',
-  'Max says your output is looking suspiciously good.',
-  'Max says this workout is now officially energized.',
-  'Max says the breaker is holding. Keep going.',
-  'Max says you\'re more charged than you think.'
+  'Burnie brought the energy. You bring the reps.',
+  'Burnie says the circuit is live.',
+  'Burnie says the bulb is on. Your turn.',
+  'Burnie is operating at maximum wattage.',
+  'Burnie says this one has potential.',
+  'Burnie says today\'s forecast: 100% chance of reps.',
+  'Burnie is glowing with questionable confidence.',
+  'Burnie says that\'s enough thinking.',
+  'Burnie says resistance is part of the circuit.',
+  'Burnie is suspiciously excited about burpees.',
+  'Burnie says this looked easier on paper.',
+  'Burnie says don\'t blame the dice.',
+  'Burnie claims the D20 made him do it.',
+  'Burnie says it\'s only a few reps. He may be lying.',
+  'Burnie has zero muscles and many opinions.',
+  'Burnie says sweat is just the cooling system.',
+  'Burnie says no warranty coverage for skipped reps.',
+  'Burnie says one more won\'t trip the breaker.',
+  'Burnie is monitoring your voltage.',
+  'Burnie says consider this a power cycle.',
+  'Burnie says your rest period is under review.',
+  'Burnie says you\'re cleared for full power.',
+  'Burnie says the switch only works if you flip it.',
+  'Burnie says the current plan is: keep moving.',
+  'Burnie says every rep adds a little charge.',
+  'Burnie says low battery still counts as battery.',
+  'Burnie says the meter is moving in the right direction.',
+  'Burnie says you\'ve got enough juice for one more.',
+  'Burnie says this is how you build a stronger circuit.',
+  'Burnie says the light stays on until the workout is done.',
+  'Burnie says power up. No dramatic montage required.',
+  'Burnie says progress is currently flowing.',
+  'Burnie says your output is looking suspiciously good.',
+  'Burnie says this workout is now officially energized.',
+  'Burnie says the breaker is holding. Keep going.',
+  'Burnie says you\'re more charged than you think.'
 ];
-let maxToastTimer = null;
-let lastMaxMessageIndex = -1;
+let burnieToastTimer = null;
+let lastBurnieMessageIndex = -1;
 let switchFlashTimer = null;
 
 const INTENSITY_LEVELS = [
@@ -122,7 +125,7 @@ const DEFAULT_EXERCISES = {
   Z:{amount:30,unit:'sec',name:'Fast Feet'}
 };
 
-const D20_EXERCISES = [
+const DEFAULT_D20_EXERCISES = [
   {amount:10,unit:'reps',name:'Push-Ups'},
   {amount:15,unit:'reps',name:'Air Squats'},
   {amount:20,unit:'reps',name:'Bicycle Crunches'},
@@ -145,28 +148,31 @@ const D20_EXERCISES = [
   {amount:15,unit:'reps',name:'Good Mornings'}
 ];
 
+// Fun title + plain-language grouping. Workout-by-Roll templates are intentionally
+// biased toward their grouping without stacking the same movement pattern all day.
 const D20_WORKOUTS = [
-  {name:'Balanced Six',rolls:[1,2,3,6,8,16]},
-  {name:'Push & Pace',rolls:[1,4,7,11,12,16]},
-  {name:'Core Engine',rolls:[5,9,13,18,8,6]},
-  {name:'Legs + Lungs',rolls:[2,4,14,17,11,3]},
-  {name:'Upper Body Burn',rolls:[1,7,10,18,12,8]},
-  {name:'Posterior Power',rolls:[6,12,20,2,5,16]},
-  {name:'Cardio Circuit',rolls:[8,11,17,19,5,9]},
-  {name:'Stability Day',rolls:[9,13,16,7,6,20]},
-  {name:'Full-Body Charge',rolls:[19,2,1,3,12,11]},
-  {name:'Steady Strength',rolls:[1,2,6,9,14,20]},
-  {name:'Shoulders + Core',rolls:[10,7,18,13,5,12]},
-  {name:'Athletic Mix',rolls:[17,4,1,15,3,20]},
-  {name:'Quick Sweat',rolls:[8,5,19,11,3,16]},
-  {name:'Strength Base',rolls:[1,2,4,6,10,12]},
-  {name:'Core Control',rolls:[9,13,16,3,7,20]},
-  {name:'Move & Brace',rolls:[15,5,4,18,6,8]},
-  {name:'Upper + Posterior',rolls:[1,10,12,20,7,2]},
-  {name:'Lower + Core',rolls:[2,4,17,6,9,13]},
-  {name:'Conditioning Mix',rolls:[19,11,5,8,17,16]},
-  {name:'Everything Day',rolls:[1,4,7,9,12,19]}
+  {name:'Full Charge',group:'Balanced Six',rolls:[1,2,3,6,8,16]},
+  {name:'Push the Pace',group:'Push + Pace',rolls:[1,4,7,11,12,16]},
+  {name:'Core Current',group:'Core Engine',rolls:[3,9,13,14,8,2]},
+  {name:'Leg Day Lightning',group:'Legs + Lungs',rolls:[2,4,17,11,1,3]},
+  {name:'Upper Voltage',group:'Upper Body Burn',rolls:[1,10,14,12,3,2]},
+  {name:'Backline Power',group:'Posterior Power',rolls:[6,12,20,2,5,16]},
+  {name:'Redline',group:'Cardio Circuit',rolls:[8,11,19,1,9,14]},
+  {name:'Steady Signal',group:'Stability Day',rolls:[9,13,6,20,14,2]},
+  {name:'Power Surge',group:'Full-Body Charge',rolls:[19,2,1,3,12,11]},
+  {name:'Grounded',group:'Steady Strength',rolls:[1,2,6,9,14,20]},
+  {name:'Shoulder Spark',group:'Shoulders + Core',rolls:[10,7,9,13,2,14]},
+  {name:'Side Quest',group:'Athletic Mix',rolls:[17,4,1,15,3,20]},
+  {name:'Quick Charge',group:'Quick Sweat',rolls:[8,19,3,1,6,16]},
+  {name:'Foundation',group:'Strength Base',rolls:[1,2,4,6,10,12]},
+  {name:'Core Voltage',group:'Core Control',rolls:[3,9,13,20,1,14]},
+  {name:'Brace for It',group:'Move + Brace',rolls:[15,4,9,6,1,14]},
+  {name:'Upper Circuit',group:'Upper + Posterior',rolls:[1,10,12,20,7,2]},
+  {name:'Lower Circuit',group:'Lower + Core',rolls:[2,4,17,6,9,13]},
+  {name:'Overdrive',group:'Conditioning Mix',rolls:[19,11,8,2,12,9]},
+  {name:'Everything On',group:'Everything Day',rolls:[1,4,7,9,12,19]}
 ];
+function d20WorkoutLabel(template){return `${template.name} (${template.group})`}
 
 const $ = id => document.getElementById(id);
 let mode = 'd20';
@@ -175,6 +181,8 @@ let d20Rolling = false;
 let d20ManualRolls = [];
 let deferredPrompt;
 let exercises = loadExercises();
+let d20Exercises = loadD20Exercises();
+let editorLibrary = 'letters';
 let intensity = 1;
 let lastRawLetters = '';
 let lastWorkout = [];
@@ -234,6 +242,22 @@ function loadExercises(){
 function saveExercises(){
   localStorage.setItem(STORAGE_KEY,JSON.stringify(exercises));
   localStorage.setItem(EXERCISE_LIBRARY_VERSION_KEY,EXERCISE_LIBRARY_VERSION);
+}
+function loadD20Exercises(){
+  let saved = null;
+  try{saved = JSON.parse(localStorage.getItem(D20_STORAGE_KEY));}catch(error){console.warn('Could not load saved D20 exercises.',error)}
+  if(!Array.isArray(saved)){
+    localStorage.setItem(D20_EXERCISE_LIBRARY_VERSION_KEY,D20_EXERCISE_LIBRARY_VERSION);
+    return structuredClone(DEFAULT_D20_EXERCISES);
+  }
+  const merged = DEFAULT_D20_EXERCISES.map((entry,index) => ({...entry,...(saved[index] || {})}));
+  localStorage.setItem(D20_STORAGE_KEY,JSON.stringify(merged));
+  localStorage.setItem(D20_EXERCISE_LIBRARY_VERSION_KEY,D20_EXERCISE_LIBRARY_VERSION);
+  return merged;
+}
+function saveD20Exercises(){
+  localStorage.setItem(D20_STORAGE_KEY,JSON.stringify(d20Exercises));
+  localStorage.setItem(D20_EXERCISE_LIBRARY_VERSION_KEY,D20_EXERCISE_LIBRARY_VERSION);
 }
 
 function renderTomorrowName(){
@@ -503,12 +527,12 @@ function buildWorkout(raw){
   }).filter(Boolean);
 }
 function buildD20ExerciseWorkout(rolls){
-  return rolls.map(roll => entryToMove(D20_EXERCISES[roll-1],roll,roll));
+  return rolls.map(roll => entryToMove(d20Exercises[roll-1],roll,roll));
 }
 function buildD20TemplateWorkout(roll){
   const template = D20_WORKOUTS[roll-1];
   if(!template) return [];
-  return template.rolls.map((exerciseRoll,index) => entryToMove(D20_EXERCISES[exerciseRoll-1],index+1,exerciseRoll));
+  return template.rolls.map((exerciseRoll,index) => entryToMove(d20Exercises[exerciseRoll-1],index+1,exerciseRoll));
 }
 function displayName(raw){
   const clean = mode === 'custom' ? normalizeFirstName(raw) : String(raw).replace(/[^A-Za-z]/g,'').trim();
@@ -531,19 +555,19 @@ async function buildWorkoutFromInput(){
   showPreview();
 }
 
-function showMaxMessage(){
-  const toast = $('maxToast');
+function showBurnieMessage(){
+  const toast = $('burnieToast');
   if(!toast) return;
-  let messageIndex = secureRandomInt(MAX_MESSAGES.length);
-  if(MAX_MESSAGES.length > 1 && messageIndex === lastMaxMessageIndex){
-    messageIndex = (messageIndex + 1 + secureRandomInt(MAX_MESSAGES.length - 1)) % MAX_MESSAGES.length;
+  let messageIndex = secureRandomInt(BURNIE_MESSAGES.length);
+  if(BURNIE_MESSAGES.length > 1 && messageIndex === lastBurnieMessageIndex){
+    messageIndex = (messageIndex + 1 + secureRandomInt(BURNIE_MESSAGES.length - 1)) % BURNIE_MESSAGES.length;
   }
-  lastMaxMessageIndex = messageIndex;
-  const message = MAX_MESSAGES[messageIndex];
+  lastBurnieMessageIndex = messageIndex;
+  const message = BURNIE_MESSAGES[messageIndex];
   toast.textContent = message;
   toast.classList.add('show');
-  if(maxToastTimer) clearTimeout(maxToastTimer);
-  maxToastTimer = setTimeout(()=>toast.classList.remove('show'),2600);
+  if(burnieToastTimer) clearTimeout(burnieToastTimer);
+  burnieToastTimer = setTimeout(()=>toast.classList.remove('show'),2600);
   vibrate(20);
 }
 
@@ -558,21 +582,111 @@ function secureRandomInt(max){
 function rollD20(){return secureRandomInt(20)+1}
 function wait(ms){return new Promise(resolve => setTimeout(resolve,ms))}
 
+// Self-contained canvas D20. It keeps the PWA offline-capable while providing a
+// real 20-face die, face numbers, drag rotation, flick direction and a settled result.
+const D20_GEOMETRY = (() => {
+  const p=(1+Math.sqrt(5))/2;
+  const vertices=[[-1,p,0],[1,p,0],[-1,-p,0],[1,-p,0],[0,-1,p],[0,1,p],[0,-1,-p],[0,1,-p],[p,0,-1],[p,0,1],[-p,0,-1],[-p,0,1]]
+    .map(v=>{const n=Math.hypot(...v);return v.map(x=>x/n)});
+  const faces=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+  const info=faces.map(indices=>{
+    const c=indices.reduce((a,i)=>a.map((x,k)=>x+vertices[i][k]),[0,0,0]).map(x=>x/3);
+    const n=Math.hypot(...c);return {indices,normal:c.map(x=>x/n),num:0};
+  });
+  let next=1;
+  info.forEach((face,i)=>{
+    if(face.num) return;
+    let best=-1,bestDot=1;
+    info.forEach((other,k)=>{if(k===i||other.num)return;const d=face.normal.reduce((sum,x,q)=>sum+x*other.normal[q],0);if(d<bestDot){bestDot=d;best=k}});
+    face.num=next; if(best>=0) info[best].num=21-next; next+=1;
+  });
+  return {vertices,faces:info};
+})();
+
+function qNorm(q){const n=Math.hypot(q[0],q[1],q[2],q[3])||1;return q.map(x=>x/n)}
+function qMul(a,b){return [a[3]*b[0]+a[0]*b[3]+a[1]*b[2]-a[2]*b[1],a[3]*b[1]-a[0]*b[2]+a[1]*b[3]+a[2]*b[0],a[3]*b[2]+a[0]*b[1]-a[1]*b[0]+a[2]*b[3],a[3]*b[3]-a[0]*b[0]-a[1]*b[1]-a[2]*b[2]]}
+function qAxis(axis,angle){const n=Math.hypot(...axis)||1,s=Math.sin(angle/2)/n;return [axis[0]*s,axis[1]*s,axis[2]*s,Math.cos(angle/2)]}
+function qRotate(v,q){const u=[q[0],q[1],q[2]],uv=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],uuv=[u[1]*uv[2]-u[2]*uv[1],u[2]*uv[0]-u[0]*uv[2],u[0]*uv[1]-u[1]*uv[0]];return v.map((x,i)=>x+2*(q[3]*uv[i]+uuv[i]))}
+function qFromVectors(a,b){
+  const dot=a.reduce((sum,x,i)=>sum+x*b[i],0);let xyz,w=1+dot;
+  if(w<1e-6){xyz=Math.abs(a[0])>Math.abs(a[2])?[-a[1],a[0],0]:[0,-a[2],a[1]];w=0}
+  else xyz=[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  return qNorm([xyz[0],xyz[1],xyz[2],w]);
+}
+function qSlerp(a,b,t){
+  let bb=[...b],cos=a.reduce((s,x,i)=>s+x*bb[i],0);if(cos<0){bb=bb.map(x=>-x);cos=-cos}
+  if(cos>.9995)return qNorm(a.map((x,i)=>x+t*(bb[i]-x)));
+  const th=Math.acos(Math.min(1,cos)),sin=Math.sin(th),w1=Math.sin((1-t)*th)/sin,w2=Math.sin(t*th)/sin;
+  return a.map((x,i)=>x*w1+bb[i]*w2);
+}
+
+class D20CanvasRenderer{
+  constructor(canvas,shadow){
+    this.canvas=canvas;this.ctx=canvas?.getContext?.('2d');this.shadow=shadow;this.q=qNorm([.16,.28,.04,.94]);this.state='idle';this.hasRolled=false;this.last=performance.now();this.offsetX=0;this.offsetY=0;this.resolve=null;this.reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;this.resizeObserver=null;
+    if(!this.ctx)return;
+    this.resize=()=>{const r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(1,Math.round(r.width*d));canvas.height=Math.max(1,Math.round(r.height*d));this.dpr=d};
+    this.resizeObserver=new ResizeObserver(this.resize);this.resizeObserver.observe(canvas);this.resize();requestAnimationFrame(t=>this.frame(t));
+  }
+  isIdle(){return this.state==='idle'}
+  drag(dx,dy){if(!this.ctx||!this.isIdle())return;const qx=qAxis([1,0,0],dy*.012),qy=qAxis([0,1,0],dx*.012);this.q=qNorm(qMul(qy,qMul(qx,this.q)));this.draw()}
+  targetFor(num){const face=D20_GEOMETRY.faces.find(f=>f.num===num)||D20_GEOMETRY.faces[0];const align=qFromVectors(face.normal,[0,0,1]),spin=qAxis([0,0,1],(secureRandomInt(628)/100));return qNorm(qMul(spin,align))}
+  roll(num,duration=700,gesture=null){
+    if(!this.ctx)return wait(duration);
+    if(this.resolve)this.resolve();
+    const now=performance.now();this.state='roll';this.started=now;this.duration=Math.max(this.reduce?80:duration,80);this.final=num;this.target=this.targetFor(num);this.startQ=[...this.q];this.power=gesture?.power??.62;this.flickX=gesture?.vx?Math.max(-1,Math.min(1,gesture.vx/1800)):0;const vx=gesture?.vx||420,vy=gesture?.vy||-680;this.axis=[vy,vx,260];const an=Math.hypot(...this.axis)||1;this.axis=this.axis.map(x=>x/an);this.hasRolled=true;
+    return new Promise(resolve=>{this.resolve=resolve});
+  }
+  frame(now){
+    const dt=Math.min((now-this.last)/1000,.05);this.last=now;
+    if(this.state==='roll'){
+      const p=Math.min((now-this.started)/this.duration,1),speed=this.reduce?0:((18+19*this.power)*Math.pow(1-p,1.6)+3.5);this.q=qNorm(qMul(qAxis(this.axis,speed*dt),this.q));this.offsetY=this.reduce?0:Math.abs(Math.sin(p*Math.PI*2.35))*(.3+.25*this.power)*(1-p*.45);this.offsetX=this.reduce?0:this.flickX*.5*this.power*Math.sin(p*Math.PI);
+      if(p>=1){this.state='settle';this.started=now;this.settleFrom=[...this.q];this.settleDuration=this.reduce?80:430}
+    }else if(this.state==='settle'){
+      const p=Math.min((now-this.started)/this.settleDuration,1),e=1-Math.pow(1-p,3);this.q=qSlerp(this.settleFrom,this.target,e);this.offsetX*=1-e;this.offsetY=Math.sin(p*Math.PI)*.08*(1-p);
+      if(p>=1){this.q=[...this.target];this.state='idle';this.offsetX=0;this.offsetY=0;const done=this.resolve;this.resolve=null;done?.()}
+    }else if(!this.hasRolled){this.q=qNorm(qMul(qAxis([.25,1,.12],dt*.28),this.q))}
+    this.draw();requestAnimationFrame(t=>this.frame(t));
+  }
+  draw(){
+    if(!this.ctx)return;const c=this.canvas,ctx=this.ctx,d=this.dpr||1,w=c.width/d,h=c.height/d;ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,w,h);const cx=w/2+this.offsetX*w*.2,cy=h*.47-this.offsetY*h*.24,cam=4.2,scale=Math.min(w,h)*1.55;
+    const verts=D20_GEOMETRY.vertices.map(v=>{const r=qRotate(v,this.q),k=scale/(cam-r[2]);return {x:cx+r[0]*k,y:cy-r[1]*k,z:r[2]}});
+    const light=[-.35,.5,.79],faces=[];
+    D20_GEOMETRY.faces.forEach(face=>{const n=qRotate(face.normal,this.q);if(n[2]<=.02)return;const pts=face.indices.map(i=>verts[i]),z=pts.reduce((s,p)=>s+p.z,0)/3;faces.push({face,n,pts,z})});faces.sort((a,b)=>a.z-b.z);
+    faces.forEach(({face,n,pts,z})=>{const lit=Math.max(.08,n[0]*light[0]+n[1]*light[1]+n[2]*light[2]),b=.58+.42*lit;const base=[255,190,25].map(x=>Math.round(x*b));ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);ctx.lineTo(pts[1].x,pts[1].y);ctx.lineTo(pts[2].x,pts[2].y);ctx.closePath();ctx.fillStyle=`rgb(${base.join(',')})`;ctx.fill();ctx.lineWidth=Math.max(1.2,w/150);ctx.strokeStyle='rgba(255,230,135,.72)';ctx.stroke();const mx=(pts[0].x+pts[1].x+pts[2].x)/3,my=(pts[0].y+pts[1].y+pts[2].y)/3;const edge=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);ctx.fillStyle='#171000';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`900 ${Math.max(10,edge*.34)}px system-ui,-apple-system,sans-serif`;ctx.fillText(String(face.num),mx,my+1)});
+    if(this.shadow){const lift=Math.min(.5,this.offsetY);this.shadow.style.transform=`translateX(${this.offsetX*38}px) scale(${1-lift*.35})`;this.shadow.style.opacity=String(.62-lift*.35)}
+  }
+}
+
+const d20Visual = new D20CanvasRenderer($('d20Canvas'),$('d20Shadow'));
+let pendingD20Gesture = null;
+let suppressD20ClickUntil = 0;
+
 async function animateD20(finalValue,duration = 650){
-  const die = document.querySelector('.d20-die');
-  const value = $('d20Value');
-  die.classList.remove('landed');
-  die.style.setProperty('--d20-turn',`${2 + secureRandomInt(4)}turn`);
-  die.style.setProperty('--d20-duration',`${duration}ms`);
-  die.classList.add('rolling');
-  const interval = setInterval(() => {value.textContent = String(rollD20())},55);
-  await wait(duration);
-  clearInterval(interval);
-  value.textContent = String(finalValue);
-  die.classList.remove('rolling');
-  void die.offsetWidth;
-  die.classList.add('landed');
+  const value=$('d20Value');value.textContent='…';value.classList.remove('landed');
+  const gesture=pendingD20Gesture;pendingD20Gesture=null;
+  await d20Visual.roll(finalValue,duration,gesture);
+  value.textContent=String(finalValue);value.classList.add('landed');
   vibrate(35);
+}
+
+function setupD20GestureControls(){
+  const stage=$('d20RollBtn'),visual=stage?.querySelector('.d20-visual');if(!stage||!visual)return;
+  let active=false,lastX=0,lastY=0,startX=0,startY=0,moved=0,samples=[];
+  visual.addEventListener('pointerdown',event=>{
+    if(d20Rolling)return;active=true;startX=lastX=event.clientX;startY=lastY=event.clientY;moved=0;samples=[{t:performance.now(),x:event.clientX,y:event.clientY}];
+    visual.classList.add('dragging');try{visual.setPointerCapture(event.pointerId)}catch{}event.preventDefault();
+  });
+  visual.addEventListener('pointermove',event=>{
+    if(!active||d20Rolling)return;const dx=event.clientX-lastX,dy=event.clientY-lastY;lastX=event.clientX;lastY=event.clientY;moved=Math.max(moved,Math.hypot(event.clientX-startX,event.clientY-startY));samples.push({t:performance.now(),x:event.clientX,y:event.clientY});if(samples.length>8)samples.shift();d20Visual.drag(dx,dy);event.preventDefault();
+  });
+  const end=event=>{
+    if(!active)return;active=false;visual.classList.remove('dragging');if(d20Rolling)return;
+    const now=performance.now(),recent=samples.filter(s=>now-s.t<150),a=recent[0]||samples[0],b=recent.at(-1)||a,dt=Math.max(((b?.t||now)-(a?.t||now))/1000,.016),vx=((b?.x||lastX)-(a?.x||startX))/dt,vy=((b?.y||lastY)-(a?.y||startY))/dt,speed=Math.hypot(vx,vy);
+    suppressD20ClickUntil=performance.now()+500;
+    if(moved>10) pendingD20Gesture={vx,vy,power:Math.max(.35,Math.min(1,speed/2200))};
+    rollD20Selection();event?.preventDefault?.();
+  };
+  visual.addEventListener('pointerup',end);visual.addEventListener('pointercancel',()=>{active=false;visual.classList.remove('dragging')});
 }
 
 function getD20Mode(){return document.querySelector('input[name="d20Mode"]:checked')?.value || 'exercise'}
@@ -585,7 +699,7 @@ function resetD20Rolls(){
 }
 function renderD20History(rolls){
   $('d20RollHistory').innerHTML = rolls.map((roll,index) => {
-    const exercise = D20_EXERCISES[roll-1];
+    const exercise = d20Exercises[roll-1];
     return `<span class="roll-chip"><b>${index+1}</b><strong>${roll}</strong><small>${escapeHtml(exercise.name)}</small></span>`;
   }).join('');
 }
@@ -608,6 +722,7 @@ function updateD20Controls(){
 
 function setD20RollingState(isRolling){
   $('d20RollBtn').disabled = isRolling;
+  $('d20RollBtn').setAttribute('aria-busy',String(isRolling));
   document.querySelectorAll('input[name="d20Mode"], #d20RollCount, #d20AutoRoll').forEach(control => {control.disabled = isRolling});
 }
 
@@ -639,7 +754,7 @@ async function rollExerciseWorkout(forceAuto=false){
       await animateD20(roll,duration);
       d20ManualRolls.push(roll);
       renderD20History(d20ManualRolls);
-      $('d20Status').textContent = `Roll ${index+1} of ${count}: ${roll} — ${D20_EXERCISES[roll-1].name}`;
+      $('d20Status').textContent = `Roll ${index+1} of ${count}: ${roll} — ${d20Exercises[roll-1].name}`;
       if(index < count-1) await wait(count > 12 ? 60 : 100);
     }
     finalizeD20ExerciseWorkout(d20ManualRolls);
@@ -651,7 +766,7 @@ async function rollExerciseWorkout(forceAuto=false){
   await animateD20(roll,700);
   d20ManualRolls.push(roll);
   renderD20History(d20ManualRolls);
-  $('d20Status').textContent = `Roll ${d20ManualRolls.length} of ${count}: ${roll} — ${D20_EXERCISES[roll-1].name}`;
+  $('d20Status').textContent = `Roll ${d20ManualRolls.length} of ${count}: ${roll} — ${d20Exercises[roll-1].name}`;
   if(d20ManualRolls.length >= count) finalizeD20ExerciseWorkout(d20ManualRolls);
 }
 
@@ -676,9 +791,9 @@ async function rollFullWorkout(){
   lastRawLetters = '';
   lastBuildKind = 'd20-workout';
   const template = D20_WORKOUTS[roll-1];
-  workoutDisplayName = applyCase(`#${roll} ${template.name}`);
-  $('d20RollHistory').innerHTML = `<span class="workout-roll-result"><b>D20 ${roll}</b><strong>${escapeHtml(template.name)}</strong><small>${template.rolls.length} moves</small></span>`;
-  $('d20Status').textContent = `D20 ${roll}: ${template.name}.`;
+  workoutDisplayName = applyCase(`#${roll} ${d20WorkoutLabel(template)}`);
+  $('d20RollHistory').innerHTML = `<span class="workout-roll-result"><b>D20 ${roll}</b><strong>${escapeHtml(template.name)}</strong><small>${escapeHtml(template.group)} • ${template.rolls.length} moves</small></span>`;
+  $('d20Status').textContent = `D20 ${roll}: ${d20WorkoutLabel(template)}.`;
   showPreview();
 }
 
@@ -751,7 +866,7 @@ function renderPreview(){
     $('workoutTagline').textContent = `D20 rolls: ${lastD20Rolls.join(' • ')}`;
   }else if(lastBuildKind === 'd20-workout'){
     const template = D20_WORKOUTS[lastD20WorkoutRoll-1];
-    $('workoutTagline').textContent = `D20 ${lastD20WorkoutRoll} selected ${template.name}.`;
+    $('workoutTagline').textContent = `D20 ${lastD20WorkoutRoll} selected ${d20WorkoutLabel(template)}.`;
   }else if(mode === 'custom'){
     $('workoutTagline').textContent = `${workoutDisplayName} is today’s workout. Spell every letter in sweat.`;
   }else{
@@ -833,6 +948,28 @@ function renderRunner(){
     updateTimerDisplay();
   }else $('timerBox').classList.add('hidden');
 }
+let runnerSwipeAnimating=false;
+function runnerTarget(delta){const next=currentMove+delta;return next>=0&&next<lastWorkout.length?next:null}
+async function navigateRunner(delta,{animate=true,fromDrag=0}={}){
+  if(runnerSwipeAnimating)return;const next=runnerTarget(delta);const main=$('runnerMain');
+  if(next===null){if(main){main.style.transform='';main.style.opacity=''}vibrate(14);return}
+  clearTimer();runnerSwipeAnimating=true;
+  if(animate&&main?.animate){
+    const width=Math.max(main.clientWidth,320),out=delta>0?-width*.48:width*.48;
+    try{await main.animate([{transform:`translateX(${fromDrag}px)`,opacity:Math.max(.45,1-Math.abs(fromDrag)/width)},{transform:`translateX(${out}px)`,opacity:.05}],{duration:130,easing:'ease-out',fill:'forwards'}).finished}catch{}
+    currentMove=next;renderRunner();main.getAnimations().forEach(a=>a.cancel());const incoming=delta>0?width*.2:-width*.2;
+    try{await main.animate([{transform:`translateX(${incoming}px)`,opacity:.15},{transform:'translateX(0)',opacity:1}],{duration:180,easing:'cubic-bezier(.2,.8,.2,1)'}).finished}catch{}
+  }else{currentMove=next;renderRunner()}
+  if(main){main.style.transform='';main.style.opacity=''}runnerSwipeAnimating=false;
+}
+function setupRunnerSwipe(){
+  const main=$('runnerMain');if(!main)return;let active=false,sx=0,sy=0,dx=0,dy=0;
+  main.addEventListener('pointerdown',event=>{if(event.target.closest('button')||runnerSwipeAnimating)return;active=true;sx=event.clientX;sy=event.clientY;dx=dy=0;try{main.setPointerCapture(event.pointerId)}catch{}});
+  main.addEventListener('pointermove',event=>{if(!active)return;dx=event.clientX-sx;dy=event.clientY-sy;if(Math.abs(dx)>Math.abs(dy)*1.05){const atEdge=(dx>0&&currentMove===0)||(dx<0&&currentMove===lastWorkout.length-1);const resistance=atEdge ? .38 : 1;main.style.transform=`translateX(${dx*resistance}px)`;main.style.opacity=String(Math.max(.55,1-Math.abs(dx)/(main.clientWidth*1.5)));event.preventDefault()}});
+  const end=()=>{if(!active)return;active=false;const threshold=Math.min(90,Math.max(55,main.clientWidth*.18));if(Math.abs(dx)>=threshold&&Math.abs(dx)>Math.abs(dy)*1.15){navigateRunner(dx<0?1:-1,{animate:true,fromDrag:dx})}else if(main.animate){main.animate([{transform:`translateX(${dx}px)`,opacity:main.style.opacity||1},{transform:'translateX(0)',opacity:1}],{duration:150,easing:'ease-out'}).finished.finally(()=>{main.style.transform='';main.style.opacity=''})}else{main.style.transform='';main.style.opacity=''}};
+  main.addEventListener('pointerup',end);main.addEventListener('pointercancel',()=>{active=false;main.style.transform='';main.style.opacity=''});
+}
+
 function updateTimerDisplay(){
   $('timerValue').textContent = timerRemaining;
   $('timerBtn').textContent = timerInterval ? 'PAUSE TIMER' : timerRemaining === 0 ? 'RESET TIMER' : 'START TIMER';
@@ -894,14 +1031,32 @@ function syncRange(rangeId,outputId,onUpdate){
 function renderEditor(){
   const units = ['reps','sec'];
   const options = [{value:'',label:'No split'},{value:'split',label:'Split half'},{value:'perSide',label:'Per side'}];
-  $('editorGrid').innerHTML = Object.entries(exercises).map(([letter,entry]) => `<div class="editor-row" data-letter="${letter}"><span class="editor-letter">${letter}</span><input class="editor-amount" type="number" min="1" value="${entry.amount}"><select class="editor-unit">${units.map(unit=>`<option value="${unit}" ${entry.unit===unit?'selected':''}>${unit}</option>`).join('')}</select><input class="editor-name" value="${escapeHtml(entry.name)}"><select class="editor-each">${options.map(option=>`<option value="${option.value}" ${entry.each===option.value||(!entry.each&&!option.value)?'selected':''}>${option.label}</option>`).join('')}</select><input class="editor-label" value="${escapeHtml(entry.eachLabel||'')}" placeholder="side/leg" ${entry.each?'':'disabled'}></div>`).join('');
+  const isD20 = editorLibrary === 'd20';
+  const entries = isD20 ? d20Exercises.map((entry,index)=>[String(index+1),entry]) : Object.entries(exercises);
+  $('editorKeyHead').textContent = isD20 ? 'Roll' : 'Letter';
+  $('editorHelp').textContent = isD20
+    ? 'Customize what each D20 number means. These moves are used by both Exercise by Roll and the 20 Workout by Roll templates.'
+    : 'Customize the A–Z exercise map used by Name, Letters, and Word modes.';
+  $('resetExercisesBtn').textContent = isD20 ? 'Reset D20' : 'Reset A–Z';
+  document.querySelectorAll('.library-tab').forEach(button=>button.classList.toggle('active',button.dataset.library===editorLibrary));
+  $('editorGrid').innerHTML = entries.map(([key,entry]) => `<div class="editor-row" data-editor-key="${key}"><span class="editor-letter">${key}</span><input class="editor-amount" type="number" min="1" value="${entry.amount}"><select class="editor-unit">${units.map(unit=>`<option value="${unit}" ${entry.unit===unit?'selected':''}>${unit}</option>`).join('')}</select><input class="editor-name" value="${escapeHtml(entry.name)}"><select class="editor-each">${options.map(option=>`<option value="${option.value}" ${entry.each===option.value||(!entry.each&&!option.value)?'selected':''}>${option.label}</option>`).join('')}</select><input class="editor-label" value="${escapeHtml(entry.eachLabel||'')}" placeholder="side/leg" ${entry.each?'':'disabled'}></div>`).join('');
   document.querySelectorAll('.editor-row').forEach(row => {
-    const letter=row.dataset.letter, amount=row.querySelector('.editor-amount'), unit=row.querySelector('.editor-unit'), name=row.querySelector('.editor-name'), each=row.querySelector('.editor-each'), label=row.querySelector('.editor-label');
+    const key=row.dataset.editorKey, amount=row.querySelector('.editor-amount'), unit=row.querySelector('.editor-unit'), name=row.querySelector('.editor-name'), each=row.querySelector('.editor-each'), label=row.querySelector('.editor-label');
     const commit = () => {
-      exercises[letter] = {amount:Math.max(1,Number(amount.value)||1),unit:unit.value,name:name.value.trim()||DEFAULT_EXERCISES[letter].name,each:each.value||undefined,eachLabel:label.value.trim()||undefined};
+      const base = isD20 ? DEFAULT_D20_EXERCISES[Number(key)-1] : DEFAULT_EXERCISES[key];
+      const updated = {amount:Math.max(1,Number(amount.value)||1),unit:unit.value,name:name.value.trim()||base.name,each:each.value||undefined,eachLabel:label.value.trim()||undefined};
       label.disabled = !each.value;
-      saveExercises();
-      if(lastBuildKind === 'letters' && lastRawLetters){lastWorkout=buildWorkout(lastRawLetters);renderPreview()}
+      if(isD20){
+        d20Exercises[Number(key)-1] = updated;
+        saveD20Exercises();
+        if(d20ManualRolls.length) renderD20History(d20ManualRolls);
+        if(lastBuildKind==='d20-exercise'&&lastD20Rolls.length){lastWorkout=buildD20ExerciseWorkout(lastD20Rolls);renderPreview()}
+        if(lastBuildKind==='d20-workout'&&lastD20WorkoutRoll){lastWorkout=buildD20TemplateWorkout(lastD20WorkoutRoll);renderPreview()}
+      }else{
+        exercises[key] = updated;
+        saveExercises();
+        if(lastBuildKind === 'letters' && lastRawLetters){lastWorkout=buildWorkout(lastRawLetters);renderPreview()}
+      }
     };
     [amount,unit,name,each,label].forEach(control => control.addEventListener('change',commit));
   });
@@ -990,7 +1145,7 @@ $('intensityRange').addEventListener('input',updateIntensitySlider);
 $('upperCase').addEventListener('change',()=>{
   if(lastBuildKind === 'letters' && lastRawLetters) workoutDisplayName=displayName(lastRawLetters);
   else if(lastBuildKind === 'd20-exercise') workoutDisplayName=applyCase(`D20 × ${lastWorkout.length}`);
-  else if(lastBuildKind === 'd20-workout' && lastD20WorkoutRoll) workoutDisplayName=applyCase(`#${lastD20WorkoutRoll} ${D20_WORKOUTS[lastD20WorkoutRoll-1].name}`);
+  else if(lastBuildKind === 'd20-workout' && lastD20WorkoutRoll) workoutDisplayName=applyCase(`#${lastD20WorkoutRoll} ${d20WorkoutLabel(D20_WORKOUTS[lastD20WorkoutRoll-1])}`);
   if(lastWorkout.length) renderPreview();
 });
 $('startBtn').addEventListener('click',startWorkout);
@@ -1000,18 +1155,20 @@ $('rerollBtn').addEventListener('click',async()=>{setMode('d20');await rollD20Se
 $('editBtn').addEventListener('click',()=>{$('previewCard').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});if(mode==='custom')$('customText').focus()});
 $('exitRunnerBtn').addEventListener('click',exitRunner);
 $('completeMoveBtn').addEventListener('click',completeCurrentMove);
-$('skipMoveBtn').addEventListener('click',()=>{currentMove=(currentMove+1)%lastWorkout.length;renderRunner()});
-$('prevMoveBtn').addEventListener('click',()=>{if(currentMove>0){currentMove-=1;renderRunner()}});
+$('skipMoveBtn').addEventListener('click',()=>navigateRunner(1));
+$('prevMoveBtn').addEventListener('click',()=>navigateRunner(-1));
 $('timerBtn').addEventListener('click',toggleTimer);
 $('wakeBtn').addEventListener('click',()=>wakeLock?releaseWakeLock():requestWakeLock());
 $('finishCloseBtn').addEventListener('click',closeFinish);
 $('finishAgainBtn').addEventListener('click',()=>{closeFinish();$('previewCard').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'});if(mode==='custom')$('customText').select()});
 $('settingsBtn').addEventListener('click',()=>{$('settingsPanel').open=true;$('settingsPanel').scrollIntoView({behavior:'smooth'})});
-$('maxMascot')?.addEventListener('click',showMaxMessage);
+$('burnieMascot')?.addEventListener('click',showBurnieMessage);
+setupRunnerSwipe();
 
 document.querySelectorAll('input[name="d20Mode"]').forEach(input=>input.addEventListener('change',()=>{resetD20Rolls();updateD20Controls()}));
 $('d20AutoRoll').addEventListener('change',()=>{resetD20Rolls();updateD20Controls()});
-$('d20RollBtn').addEventListener('click',()=>rollD20Selection());
+$('d20RollBtn').addEventListener('click',event=>{if(performance.now()<suppressD20ClickUntil){event.preventDefault();return}rollD20Selection()});
+setupD20GestureControls();
 $('d20ResetBtn').addEventListener('click',resetD20Rolls);
 
 $('dailyNameToggle').checked=dailyNameEnabled;
@@ -1033,18 +1190,30 @@ setMode(getDefaultMode());
 updateIntensitySlider();
 loadTodaySchedule();
 
+document.querySelectorAll('.library-tab').forEach(button=>button.addEventListener('click',()=>{editorLibrary=button.dataset.library;renderEditor()}));
 $('resetExercisesBtn').addEventListener('click',()=>{
-  if(!confirm('Reset all letter exercises to the balanced default list?')) return;
-  exercises=structuredClone(DEFAULT_EXERCISES);
-  saveExercises();
+  if(editorLibrary==='d20'){
+    if(!confirm('Reset all D20 exercises to the balanced default list?')) return;
+    d20Exercises=structuredClone(DEFAULT_D20_EXERCISES);
+    saveD20Exercises();
+    if(d20ManualRolls.length) renderD20History(d20ManualRolls);
+    if(lastBuildKind==='d20-exercise'&&lastD20Rolls.length) lastWorkout=buildD20ExerciseWorkout(lastD20Rolls);
+    if(lastBuildKind==='d20-workout'&&lastD20WorkoutRoll) lastWorkout=buildD20TemplateWorkout(lastD20WorkoutRoll);
+  }else{
+    if(!confirm('Reset all A–Z exercises to the balanced default list?')) return;
+    exercises=structuredClone(DEFAULT_EXERCISES);
+    saveExercises();
+    if(lastBuildKind==='letters'&&lastRawLetters) lastWorkout=buildWorkout(lastRawLetters);
+  }
   renderEditor();
-  if(lastBuildKind==='letters'&&lastRawLetters){lastWorkout=buildWorkout(lastRawLetters);renderPreview()}
+  if(lastWorkout.length) renderPreview();
 });
 $('exportExercisesBtn').addEventListener('click',()=>{
-  const url=URL.createObjectURL(new Blob([JSON.stringify(exercises,null,2)],{type:'application/json'}));
+  const payload={schemaVersion:2,letters:exercises,d20:d20Exercises};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
   const anchor=document.createElement('a');
   anchor.href=url;
-  anchor.download='amped-exercises.json';
+  anchor.download='amped-exercise-libraries.json';
   anchor.click();
   URL.revokeObjectURL(url);
 });
@@ -1053,10 +1222,19 @@ $('importExercisesInput').addEventListener('change',async event=>{
   if(!file)return;
   try{
     const imported=JSON.parse(await file.text());
-    Object.keys(DEFAULT_EXERCISES).forEach(letter=>{if(imported[letter])exercises[letter]={...exercises[letter],...imported[letter]}});
+    const importedLetters=imported.letters && typeof imported.letters==='object' ? imported.letters : (!imported.d20 ? imported : null);
+    const importedD20=Array.isArray(imported.d20) ? imported.d20 : null;
+    if(importedLetters) Object.keys(DEFAULT_EXERCISES).forEach(letter=>{if(importedLetters[letter])exercises[letter]={...exercises[letter],...importedLetters[letter]}});
+    if(importedD20) DEFAULT_D20_EXERCISES.forEach((entry,index)=>{if(importedD20[index])d20Exercises[index]={...d20Exercises[index],...importedD20[index]}});
+    if(!importedLetters && !importedD20) throw new Error('No exercise libraries found');
     saveExercises();
+    saveD20Exercises();
     renderEditor();
-  }catch{alert('That file is not valid exercise JSON.')}
+    if(lastBuildKind==='letters'&&lastRawLetters) lastWorkout=buildWorkout(lastRawLetters);
+    if(lastBuildKind==='d20-exercise'&&lastD20Rolls.length) lastWorkout=buildD20ExerciseWorkout(lastD20Rolls);
+    if(lastBuildKind==='d20-workout'&&lastD20WorkoutRoll) lastWorkout=buildD20TemplateWorkout(lastD20WorkoutRoll);
+    if(lastWorkout.length) renderPreview();
+  }catch{alert('That file is not valid AMPED exercise-library JSON.')}
   event.target.value='';
 });
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferredPrompt=event;$('installBtn').classList.remove('hidden')});

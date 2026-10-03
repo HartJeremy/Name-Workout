@@ -4,7 +4,7 @@
 
 Mobile-first PWA with D20 as the default workout mode. Mode-aware tagline: D20 “Roll it. Sweat it. Build it.”; Name “Spell it. Sweat it. Build it.”; Letters “Draw it. Sweat it. Build it.”; Word “Pick it. Sweat it. Build it.” Name, random letters, and dictionary word modes remain available.
 
-The bulb mascot is **Max**, kept intentionally subtle as an Easter egg. Tapping the bulb artwork reveals one of Max’s rotating funny-but-motivational messages without changing the main AMPED branding. The mobile layout also respects iOS safe areas so the header controls remain below the status bar when installed to the Home Screen.
+The bulb mascot is **Burnie**, kept intentionally subtle as an Easter egg. Tapping the bulb artwork reveals one of Burnie’s rotating funny-but-motivational messages without changing the main AMPED branding. The mobile layout also respects iOS safe areas so the header controls remain below the status bar when installed to the Home Screen.
 
 ## Ready-to-deploy files
 
@@ -103,5 +103,13 @@ The `note` field is optional and is not used as part of the workout.
 ## Timed side changes
 For any timed exercise configured as Split half or Per side, AMPED flashes a SWITCH SIDES/LEGS/etc. cue at the halfway point and vibrates when vibration is enabled.
 
-### Max Easter egg
-Tap the bulb artwork to reveal one of Max's rotating hidden electrical/workout jokes.
+### Burnie Easter egg
+Tap the bulb artwork to reveal one of Burnie's rotating hidden electrical/workout jokes.
+
+### D20 exercise library
+Settings now includes separate **A–Z → Exercise** and **D20 → Exercise** editors. Changes to the D20 map affect both individual exercise rolls and the 20 preset Workout-by-Roll templates. Each preset displays a fun title followed by its descriptive grouping in parentheses.
+
+
+### D20 interaction
+
+The D20 can be tapped, dragged, or flicked. Flick direction and speed influence the visual throw while the secure random roll still determines the result. During an active workout, swipe left to move to the next exercise and swipe right to go back; swiping does not mark exercises complete.

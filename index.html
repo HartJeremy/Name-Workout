@@ -31,7 +31,7 @@
     <section class="hero-card">
       <div class="hero-art">
         <img src="wod-hero.jpg" alt="">
-        <button id="maxMascot" class="max-hotspot" type="button" aria-label="Max, the AMPED bulb" title="Max"></button>
+        <button id="burnieMascot" class="burnie-hotspot" type="button" aria-label="Burnie, the AMPED bulb" title="Burnie"></button>
       </div>
       <div class="hero-copy">
         <p class="eyebrow">Workout of the day</p>
@@ -101,13 +101,12 @@
           <p class="hint">Turn auto-roll off to roll each exercise yourself, one at a time.</p>
         </div>
 
-        <button id="d20RollBtn" class="d20-stage" type="button" aria-label="Roll the D20">
-          <span class="d20-die" aria-hidden="true">
-            <svg viewBox="0 0 120 112" role="presentation">
-              <polygon class="d20-face" points="60,4 109,32 104,87 60,108 16,87 11,32"></polygon>
-              <path class="d20-lines" d="M60 4 36 42 11 32M60 4 84 42 109 32M36 42 60 108 84 42M16 87 36 42 104 87M11 32 60 65 109 32M60 65 16 87M60 65 104 87"></path>
-            </svg>
-            <strong id="d20Value">20</strong>
+        <button id="d20RollBtn" class="d20-stage" type="button" aria-label="Roll the D20. Flick, drag, or tap the die.">
+          <span class="d20-visual" aria-hidden="true">
+            <span id="d20Shadow" class="d20-shadow"></span>
+            <canvas id="d20Canvas" class="d20-canvas"></canvas>
+            <strong id="d20Value" class="d20-result-value">20</strong>
+            <small class="d20-flick-hint">FLICK • DRAG • TAP</small>
           </span>
           <span class="d20-action"><b id="d20ActionLabel">ROLL THE D20</b><small id="d20ActionSub">Auto-roll 6 exercises</small></span>
         </button>
@@ -171,18 +170,23 @@
           <label class="toggle-control"><input id="upperCase" type="checkbox" checked><span>Show workout in uppercase</span></label>
           <label class="toggle-control"><input id="vibrationToggle" type="checkbox" checked><span>Vibrate when a move is completed</span></label>
         </div>
-        <div class="editor-toolbar">
-          <button id="resetExercisesBtn" class="secondary" type="button">Reset exercises</button>
-          <button id="exportExercisesBtn" class="secondary" type="button">Export JSON</button>
-          <label class="secondary import-label">Import JSON<input id="importExercisesInput" type="file" accept="application/json" hidden></label>
+        <div class="library-switch" role="tablist" aria-label="Exercise library">
+          <button class="library-tab active" type="button" data-library="letters" role="tab">A–Z → Exercise</button>
+          <button class="library-tab" type="button" data-library="d20" role="tab">D20 → Exercise</button>
         </div>
-        <div class="editor-head"><span></span><span>Amount</span><span>Unit</span><span>Exercise</span><span>Split</span><span>Label</span></div>
+        <p id="editorHelp" class="editor-help">Customize the A–Z exercise map used by Name, Letters, and Word modes.</p>
+        <div class="editor-toolbar">
+          <button id="resetExercisesBtn" class="secondary" type="button">Reset A–Z</button>
+          <button id="exportExercisesBtn" class="secondary" type="button">Export all</button>
+          <label class="secondary import-label">Import<input id="importExercisesInput" type="file" accept="application/json" hidden></label>
+        </div>
+        <div class="editor-head"><span id="editorKeyHead">Letter</span><span>Amount</span><span>Unit</span><span>Exercise</span><span>Split</span><span>Label</span></div>
         <div id="editorGrid" class="editor-grid"></div>
       </div>
     </details>
   </main>
 
-  <div id="maxToast" class="max-toast" role="status" aria-live="polite"></div>
+  <div id="burnieToast" class="burnie-toast" role="status" aria-live="polite"></div>
   <div id="switchFlash" class="switch-flash" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
   <section id="runner" class="runner hidden" aria-label="Active workout">
@@ -192,11 +196,12 @@
       <button id="wakeBtn" class="runner-icon" type="button" aria-label="Keep screen awake">☀</button>
     </div>
     <div class="progress-track"><span id="progressBar"></span></div>
-    <div class="runner-main">
+    <div id="runnerMain" class="runner-main">
       <div id="runnerLetter" class="runner-letter">J</div>
       <p class="runner-kicker">YOUR NEXT MOVE</p>
       <h2 id="runnerExercise">15 Bicycle Crunches</h2>
       <p id="runnerSplit" class="runner-split"></p>
+      <p class="runner-swipe-hint">Swipe left = next • Swipe right = back</p>
       <div id="timerBox" class="timer-box hidden">
         <strong id="timerValue">30</strong><span>SECONDS</span>
         <button id="timerBtn" class="timer-button" type="button">START TIMER</button>
