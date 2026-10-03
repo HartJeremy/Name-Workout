@@ -1,7 +1,7 @@
 {
   "name":"Name WOD",
   "short_name":"Name WOD",
-  "description":"Turn a first name into today's workout of the day.",
+  "description":"Build today's workout from a scheduled name, random letters, a word, or a D20 roll.",
   "id":"/Name-Workout/",
   "start_url":"/Name-Workout/",
   "scope":"/Name-Workout/",

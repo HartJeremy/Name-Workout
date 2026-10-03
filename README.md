@@ -1,6 +1,6 @@
 # Name WOD
 
-Mobile-first PWA that turns a first name, random letters, or a dictionary word into a workout.
+Mobile-first PWA that builds a workout from a scheduled first name, random letters, a dictionary word, or a D20 roll.
 
 ## Ready-to-deploy files
 
@@ -26,8 +26,16 @@ Required files:
 
 - The app fills today's scheduled first name when the on-screen daily-name setting is enabled.
 - If today's date is absent, the name field remains blank.
+- When the schedule has no current or future names remaining, the Name tab is hidden automatically while Letters, Word, and D20 remain available.
 - Parenthetical clarifiers are stored as an optional `note` and never count as workout letters.
 - The notification workflow sends nothing on dates without a schedule entry.
+
+
+## D20 workout modes
+
+- **Exercise by roll:** choose 1-20 rolls. Auto-roll can build the full workout in one tap, or it can be disabled to roll each movement manually.
+- **Workout by roll:** one D20 roll chooses one of 20 complete balanced bodyweight workouts. Roll Again produces a new selection.
+- The D20 exercise table and the A-Z letter table both mix upper body, lower body, core, cardio, and posterior-chain work.
 
 ## Notification controls
 

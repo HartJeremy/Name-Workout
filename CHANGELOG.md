@@ -1,5 +1,17 @@
 # Name WOD update
 
+## Version 2.0
+
+- Adds D20 as a fourth workout source alongside Name, Letters, and Word.
+- Adds Exercise by Roll with a selectable 1-20 roll count and manual or automatic rolling.
+- Adds Workout by Roll with 20 distinct full-body workout templates and a Roll Again action.
+- Adds an animated D20 graphic with roll history and result feedback.
+- Rebalances the default A-Z exercise library across upper body, lower body, core, cardio, and posterior-chain movements.
+- Migrates untouched legacy exercise defaults while preserving user-customized letter exercises.
+- Automatically hides the Name tab once the dated name schedule has no current or future entries; Letters, Word, and D20 remain available.
+- Bumps the PWA cache version so deployed devices receive the update.
+
+
 ## Version 1.0
 
 - Shows every workout move in the preview.
@@ -11,3 +23,11 @@
 - Uses the dated schedule for today's default name.
 - Leaves the name blank when today has no schedule entry.
 - Preserves per-device notification enable/disable and reminder-time settings.
+
+## D20 POC refinement
+- D20 is now the default startup workout mode unless the user selects another default.
+- Added a Default workout mode selector in Settings (D20, Name, Letters, Word).
+- If the scheduled-name list is exhausted, Name is hidden and an obsolete Name default falls back to D20.
+- Replaced the native share action with a one-tap Copy workout clipboard action.
+- Added Copy completed workout directly to the completion screen for easy paste into group text.
+- Bumped the service-worker cache to v11.

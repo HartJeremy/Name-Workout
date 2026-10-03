@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Name WOD">
-  <meta name="description" content="Turn a first name into today's workout of the day.">
+  <meta name="description" content="Build today's workout from a scheduled name, random letters, a word, or a D20 roll.">
   <title>Name WOD</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png" type="image/png">
@@ -33,7 +33,7 @@
       <div class="hero-copy">
         <p class="eyebrow">Workout of the day</p>
         <h1>Spell it.<br><span>Sweat it.</span></h1>
-        <p>Choose a first name. Every letter unlocks the next move.</p>
+        <p>Choose a name, letters, a word, or let a D20 build today's workout.</p>
       </div>
     </section>
 
@@ -44,9 +44,10 @@
       </div>
 
       <div class="segmented" role="tablist" aria-label="Workout source">
-        <button class="tab active" type="button" data-mode="custom" role="tab" aria-selected="true">Name</button>
+        <button id="nameModeTab" class="tab active" type="button" data-mode="custom" role="tab" aria-selected="true">Name</button>
         <button class="tab" type="button" data-mode="letters" role="tab" aria-selected="false">Letters</button>
         <button class="tab" type="button" data-mode="word" role="tab" aria-selected="false">Word</button>
+        <button class="tab" type="button" data-mode="d20" role="tab" aria-selected="false">D20</button>
       </div>
 
       <div id="customPanel" class="input-panel active">
@@ -75,10 +76,47 @@
         </div>
         <p class="hint">Words come from a dictionary package, not a hard-coded list.</p>
       </div>
+      <div id="d20Panel" class="input-panel">
+        <div class="d20-mode-grid" role="radiogroup" aria-label="D20 workout style">
+          <label class="roll-mode-card">
+            <input type="radio" name="d20Mode" value="exercise" checked>
+            <span><b>Exercise by roll</b><small>Each roll chooses one movement.</small></span>
+          </label>
+          <label class="roll-mode-card">
+            <input type="radio" name="d20Mode" value="workout">
+            <span><b>Workout by roll</b><small>One roll chooses 1 of 20 complete workouts.</small></span>
+          </label>
+        </div>
+
+        <div id="d20ExerciseOptions" class="d20-options">
+          <label for="d20RollCount">How many exercise rolls?</label>
+          <div class="range-row">
+            <input id="d20RollCount" type="range" min="1" max="20" value="6">
+            <output id="d20RollCountNumber" class="range-value">6</output>
+          </div>
+          <label class="toggle-control d20-auto-toggle"><input id="d20AutoRoll" type="checkbox" checked><span>Auto-roll the full workout</span></label>
+          <p class="hint">Turn auto-roll off to roll each exercise yourself, one at a time.</p>
+        </div>
+
+        <button id="d20RollBtn" class="d20-stage" type="button" aria-label="Roll the D20">
+          <span class="d20-die" aria-hidden="true">
+            <svg viewBox="0 0 120 112" role="presentation">
+              <polygon class="d20-face" points="60,4 109,32 104,87 60,108 16,87 11,32"></polygon>
+              <path class="d20-lines" d="M60 4 36 42 11 32M60 4 84 42 109 32M36 42 60 108 84 42M16 87 36 42 104 87M11 32 60 65 109 32M60 65 16 87M60 65 104 87"></path>
+            </svg>
+            <strong id="d20Value">20</strong>
+          </span>
+          <span class="d20-action"><b id="d20ActionLabel">ROLL THE D20</b><small id="d20ActionSub">Auto-roll 6 exercises</small></span>
+        </button>
+        <div id="d20RollHistory" class="roll-history" aria-live="polite"></div>
+        <p id="d20Status" class="hint d20-status">Roll the die to build today’s workout.</p>
+        <button id="d20ResetBtn" class="secondary d20-reset hidden" type="button">Clear rolls</button>
+      </div>
+
 
       <div class="quick-options">
        <div class="intensity-control"><div class="intensity-heading"><span>Intensity</span><strong id="intensityLabel">💡 Powered • 1×</strong></div><input id="intensityRange" class="intensity-slider" type="range" min="0" max="5" step="1" value="2" aria-label="Workout intensity" aria-valuetext="💡 Powered • 1×"></div>
-       <label class="toggle-control"><input id="allowDuplicates" type="checkbox" checked><span>Count repeat letters</span></label>
+       <label id="duplicatesControl" class="toggle-control"><input id="allowDuplicates" type="checkbox" checked><span>Count repeat letters</span></label>
       </div>
 
       <button id="generateBtn" class="primary jumbo" type="button"><span>BUILD THE WORKOUT</span><small>Map every letter to a move</small></button>
@@ -97,8 +135,9 @@
       </aside>
       <div class="preview-actions">
         <button id="startBtn" class="primary jumbo" type="button"><span>START WORKOUT</span><small>Keep the screen awake</small></button>
-        <button id="copyBtn" class="secondary" type="button">Share workout</button>
-        <button id="editBtn" class="secondary" type="button">Change name</button>
+        <button id="copyBtn" class="secondary" type="button">Copy workout</button>
+        <button id="rerollBtn" class="secondary hidden" type="button">Roll again</button>
+        <button id="editBtn" class="secondary" type="button">Change setup</button>
       </div>
     </section>
 
@@ -115,6 +154,15 @@
     <details id="settingsPanel" class="settings-card">
       <summary>Workout settings and exercise library</summary>
       <div class="settings-body">
+        <div class="default-mode-setting">
+          <label for="defaultModeSelect"><b>Default workout mode</b><small>Choose what opens first. D20 is the default.</small></label>
+          <select id="defaultModeSelect" aria-label="Default workout mode">
+            <option value="d20">D20</option>
+            <option value="custom">Name</option>
+            <option value="letters">Letters</option>
+            <option value="word">Word</option>
+          </select>
+        </div>
         <div class="option-grid">
           <label class="toggle-control"><input id="dailyNameToggle" type="checkbox" checked><span>Fill in today’s scheduled name</span></label>
           <label class="toggle-control"><input id="upperCase" type="checkbox" checked><span>Show workout in uppercase</span></label>
@@ -160,8 +208,9 @@
     <p class="eyebrow">WOD complete</p>
     <h2 id="finishTitle">JEREMY<br>CONQUERED.</h2>
     <p id="finishStats">10 moves finished.</p>
-    <button id="finishAgainBtn" class="primary jumbo" type="button"><span>BUILD ANOTHER</span><small>Choose the next first name</small></button>
-    <button id="finishCloseBtn" class="secondary" type="button">Review workout</button>
+    <button id="finishCopyBtn" class="primary jumbo finish-copy" type="button"><span>COPY COMPLETED WORKOUT</span><small>Paste it straight into the group text</small></button>
+    <button id="finishAgainBtn" class="secondary finish-secondary" type="button">Build another</button>
+    <button id="finishCloseBtn" class="secondary finish-secondary" type="button">Review workout</button>
   </section>
 
   <script type="module" src="app.js"></script>
