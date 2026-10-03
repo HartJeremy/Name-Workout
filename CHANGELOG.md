@@ -1,5 +1,11 @@
 # Name WOD update
 
+## Version 2.1
+
+- Replaces Calf Raises with 12 Reverse Snow Angels in both the D20 exercise pool and the default A-Z library to improve upper-back/posture balance.
+- Preserves customized V exercises while automatically migrating untouched v2 Calf Raises installs.
+- Bumps the exercise-library version to v3 and the PWA cache to v14.
+
 ## Version 2.0
 
 - Adds D20 as a fourth workout source alongside Name, Letters, and Word.

@@ -1,7 +1,7 @@
 const ENABLE_NOTIFICATIONS = false;
 const STORAGE_KEY = 'nameWorkoutExercises';
 const EXERCISE_LIBRARY_VERSION_KEY = 'nameWorkoutExerciseLibraryVersion';
-const EXERCISE_LIBRARY_VERSION = '2';
+const EXERCISE_LIBRARY_VERSION = '3';
 const RECENT_NAMES_KEY = 'nameWorkoutRecentNames';
 const DAILY_NAME_ENABLED_KEY = 'nameWorkoutDailyNameEnabled';
 const DEFAULT_MODE_KEY = 'nameWorkoutDefaultMode';
@@ -68,7 +68,7 @@ const DEFAULT_EXERCISES = {
   S:{amount:15,unit:'reps',name:'Good Mornings'},
   T:{amount:6,unit:'reps',name:'Burpees'},
   U:{amount:40,unit:'sec',name:'Side Plank',each:'split',eachLabel:'side'},
-  V:{amount:20,unit:'reps',name:'Calf Raises'},
+  V:{amount:12,unit:'reps',name:'Reverse Snow Angels'},
   W:{amount:25,unit:'sec',name:'Hollow Hold'},
   X:{amount:12,unit:'reps',name:'Bird Dogs',each:'split',eachLabel:'side'},
   Y:{amount:30,unit:'sec',name:'Bear Crawl'},
@@ -89,7 +89,7 @@ const D20_EXERCISES = [
   {amount:30,unit:'sec',name:'High Knees'},
   {amount:12,unit:'reps',name:'Superman Lifts'},
   {amount:40,unit:'sec',name:'Side Plank',each:'split',eachLabel:'side'},
-  {amount:20,unit:'reps',name:'Calf Raises'},
+  {amount:12,unit:'reps',name:'Reverse Snow Angels'},
   {amount:30,unit:'sec',name:'Bear Crawl'},
   {amount:30,unit:'sec',name:'Forearm Plank'},
   {amount:20,unit:'reps',name:'Skater Hops',each:'split',eachLabel:'side'},
@@ -170,6 +170,11 @@ function loadExercises(){
   const migrated = Object.fromEntries(Object.keys(DEFAULT_EXERCISES).map(letter => {
     const savedEntry = saved[letter];
     if(currentVersion !== EXERCISE_LIBRARY_VERSION && sameExercise(savedEntry,LEGACY_DEFAULT_EXERCISES[letter])){
+      return [letter,{...DEFAULT_EXERCISES[letter]}];
+    }
+    // v2 used Calf Raises for V. Upgrade untouched installs to the more balanced
+    // upper-back/posture movement while preserving any user customization.
+    if(currentVersion === '2' && letter === 'V' && sameExercise(savedEntry,{amount:20,unit:'reps',name:'Calf Raises'})){
       return [letter,{...DEFAULT_EXERCISES[letter]}];
     }
     return [letter,{...DEFAULT_EXERCISES[letter],...(savedEntry || {})}];
