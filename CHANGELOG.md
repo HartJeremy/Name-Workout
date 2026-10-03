@@ -1,3 +1,11 @@
+# AMPED Changelog
+
+## v22 - 2026-10-03
+- Fixed active-workout mobile layout after the skip-state UI was added.
+- Runner grid now gives the flexible vertical space to the exercise area instead of the status summary.
+- Keeps progress summary and status dots directly under the header while vertically centering the current exercise.
+- PWA cache bumped to `amped-v31`.
+
 # Changelog
 
 ## v20 - Wake control + Max exercise guides
