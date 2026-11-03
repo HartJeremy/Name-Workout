@@ -1,0 +1,14 @@
+/* Primary AMPED navigation. Existing workout .tab styles are untouched. */
+.monthly-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:5px;margin:12px 0 16px;border:1px solid #3c3b34;border-radius:17px;background:#191b19}
+.monthly-tab{min-width:0;border:0;border-radius:12px;padding:13px 7px;background:transparent;color:#bfc0b6;font:750 14px/1.25 system-ui,-apple-system,sans-serif;cursor:pointer}
+.monthly-tab.is-active{background:#eacb80;color:#241e12;box-shadow:0 2px 9px #0002}
+.monthly-tab:focus-visible,.monthly-open-workouts:focus-visible{outline:2px solid #f2c75b;outline-offset:3px}
+.monthly-panel[hidden]{display:none!important}
+.monthly-featured{border:1px solid #454037;border-radius:18px;overflow:hidden;background:#fbf7ef}
+#monthly-frame{width:100%;min-height:420px;height:1060px;display:block;border:0;background:#fbf7ef}
+.monthly-empty{padding:46px 24px 42px;text-align:center;color:#f2ebdc;background:radial-gradient(ellipse at top,#313124,#181b19)}
+.monthly-empty .monthly-kicker{color:#e1b65c;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;font-size:11px}
+.monthly-empty h2{margin:12px 0 12px;font-family:Georgia,serif;font-weight:400;font-size:clamp(27px,6vw,41px)}
+.monthly-empty p{margin:0 auto 24px;max-width:440px;color:#c8c3b8;font-size:14px;line-height:1.65}
+.monthly-open-workouts{border:0;border-radius:12px;background:#e9c57c;color:#241e15;font-weight:800;padding:13px 20px;cursor:pointer}
+@media(max-width:460px){.monthly-tabs{gap:4px;padding:4px;margin:9px 0 12px}.monthly-tab{padding:12px 4px;font-size:13px}.monthly-featured{border-radius:12px}}
