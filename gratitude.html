@@ -41,7 +41,7 @@ footer{font-size:11px;line-height:1.6;color:#939489;text-align:center;padding:14
  <svg id="overlay" viewBox="0 0 941 675" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><ellipse id="pile-shadow" cx="416" cy="638" rx="0" ry="0" fill="#4c3a20" opacity=".22"/><g id="pile"></g><g id="flying-leaf"></g></svg>
 </section>
 <div class="scene-caption"><span>Small moments, gathered over time</span><span class="aside" id="scene-caption">One leaf falls each day</span></div>
-<section class="reflection" aria-live="polite"><div class="reflection-kicker" id="question-label">November gratitude</div><h2 id="question">A new reflection begins Wednesday, November 4.</h2><p id="question-sub">Take a moment for yourself. Sharing is always optional.</p><button id="early-trigger" class="reveal" type="button" hidden>Drop today’s leaf</button><button id="reveal" class="reveal" type="button" hidden>Reveal today’s reflection</button></section>
+<section class="reflection" aria-live="polite"><div class="reflection-kicker" id="question-label">November gratitude</div><h2 id="question">A new reflection begins Wednesday, November 4.</h2><p id="question-sub">Take a moment for yourself. Sharing is always optional.</p><button id="early-trigger" class="reveal" type="button" hidden>Drop today’s leaf</button></section>
 <div class="toolbar"><span class="when">November 4–30, 2026 · Eastern Time</span></div>
 <div class="static-note">Open this page in Safari or Chrome to view the daily falling leaf and reflection.</div>
 <footer>Questions and artwork are date-driven. No account, saved progress, or database required.</footer>
@@ -111,7 +111,6 @@ footer{font-size:11px;line-height:1.6;color:#939489;text-align:center;padding:14
     el('question').textContent='Want to try November’s daily leaf?';
     el('question-sub').textContent='Try 30 burpees if you like, then tap below to watch your leaf fall. The official challenge begins November 4.';
     el('early-trigger').hidden=false;
-    el('reveal').hidden=true;
     el('scene-caption').textContent='Early access · Nov 3';
     return;
   }
@@ -122,18 +121,16 @@ footer{font-size:11px;line-height:1.6;color:#939489;text-align:center;padding:14
   el('question-label').textContent=day===0?'November gratitude':day===7?'November 10 · one year':day===23?'Thanksgiving · November 26':`${dateText(day)} · reflection`;
   el('question').textContent=day===0?'A new reflection begins Wednesday, November 4.':'One leaf has fallen. One reflection is waiting.';
   el('question-sub').textContent=day===0?'Take a moment for yourself. Sharing is always optional.':'Finish your 30 burpees. Then take a moment to reflect. Sharing is optional.';
-  el('reveal').hidden=day===0;el('reveal').textContent='Reveal today’s reflection';
   el('scene-caption').textContent=day===0?'The tree is ready':`Day ${day} of 27`;
  }
  function render(day,animate=false){
   cancel();active=day;hasLanded=!animate&&day>0;content(day);
   el('flying-leaf').replaceChildren();
-  if(!animate || day===0){pile(Math.max(0,day));return;}
+  if(!animate || day===0){pile(Math.max(0,day));if(day>0)reveal();return;}
   const bonus=day===-1;
   const leafIndex=bonus?0:day-1;
   pile(bonus?0:day-1);
   el('early-trigger').hidden=true;
-  el('reveal').hidden=true;
   el('question-label').textContent=bonus?'Your bonus leaf is falling':'Watch today’s leaf';
   el('question').textContent='One leaf, one day, one moment to reflect.';
   el('question-sub').textContent='Watch it drift and settle into the growing pile.';
@@ -156,9 +153,7 @@ footer{font-size:11px;line-height:1.6;color:#939489;text-align:center;padding:14
    frame=null;hasLanded=true;el('flying-leaf').replaceChildren();pile(bonus?1:day);
    el('leaf-status').textContent=bonus?'Bonus leaf · official count starts Nov 4':`${day} of 27 leaves fallen`;
    el('question-label').textContent=bonus?'November 3 · Optional preview':day===7?'November 10 · one year':day===23?'Thanksgiving · November 26':`${dateText(day)} · reflection`;
-   el('question').textContent='Today’s leaf has landed. What will you reflect on?';
-   el('question-sub').textContent='Tap the button to discover today’s question.';
-   el('reveal').hidden=false;
+   reveal();
   }
   frame=requestAnimationFrame(tick);
  }
@@ -168,12 +163,9 @@ footer{font-size:11px;line-height:1.6;color:#939489;text-align:center;padding:14
   el('question-label').textContent=bonus?'November 3 · Optional preview':active===7?'November 10 · one-year anniversary':active===23?'Thanksgiving · November 26':`${dateText(active)} · reflection`;
   el('question').textContent=bonus?EARLY_QUESTION:QUESTIONS[active-1];
   el('question-sub').textContent='You can keep your answer private or share it with the group.';
-  el('reveal').hidden=true;pile(bonus?1:active);
+  pile(bonus?1:active);
  }
  el('early-trigger').addEventListener('click',()=>{if(eastDate()===EARLY_DATE)render(-1,true);});
- el('reveal').addEventListener('click',reveal);
- // Clicking the leaf pile is an alternative to the reveal button after the fall.
- el('overlay').style.pointerEvents='auto';el('overlay').addEventListener('click',e=>{if((active>0||active===-1)&&hasLanded){const r=el('overlay').getBoundingClientRect();const sx=941/r.width,sy=675/r.height;const px=(e.clientX-r.left)*sx,py=(e.clientY-r.top)*sy;if(px>300&&px<570&&py>540&&py<675)reveal();}});
  document.documentElement.classList.add('js-ready');lastDate=eastDate();render(liveDay(),liveDay()>0&&dayCount(eastDate())<=N);
  function checkDate(){const d=eastDate();if(lastDate!==d){lastDate=d;render(liveDay(),liveDay()>0&&dayCount(d)<=N);}}
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkDate();});setInterval(checkDate,60000);
